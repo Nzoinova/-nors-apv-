@@ -10,6 +10,18 @@ export const TIPOS_REVISAO: Record<string, string> = {
 
 export const STATUS_OS = ['Aberta', 'Em Curso', 'Concluída', 'Cancelada'] as const
 
+export const LOCALIZACOES = ['Luanda', 'Lubango', 'Lobito'] as const
+
+export const TIPOS_OS = ['Interna', 'Cliente'] as const
+
+export const OS_PREFIXES: Record<string, Record<string, string>> = {
+  Luanda:  { Interna: '49', Cliente: '59' },
+  Lubango: { Interna: '46', Cliente: '56' },
+  Lobito:  { Interna: '45', Cliente: '55' },
+}
+
+export const MARCAS = ['Dongfeng', 'Volvo', 'SDMO', 'Rekohl'] as const
+
 export const STATUS_CONTRATO_COLORS: Record<string, { bg: string; text: string }> = {
   ATIVO: { bg: 'bg-emerald-50', text: 'text-emerald-700' },
   'A RENOVAR': { bg: 'bg-amber-50', text: 'text-amber-700' },
