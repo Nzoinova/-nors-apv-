@@ -1,5 +1,3 @@
-// Types aligned with Supabase schema
-
 export interface Cliente {
   id: string
   nome: string
@@ -19,12 +17,15 @@ export interface Viatura {
   matricula: string | null
   vin: string
   marca: string
+  modelo: string | null
   tipo: string | null
+  ano: number | null
+  tipo_combustivel: string | null
   km_inicial: number | null
+  horas_motor_segundos: number | null
   ativo: boolean
   created_at: string
   updated_at: string
-  // Joined
   cliente?: Cliente
 }
 
@@ -42,25 +43,26 @@ export interface Contrato {
   observacoes: string | null
   created_at: string
   updated_at: string
-  // Joined
   viatura?: Viatura
   cliente?: Cliente
 }
 
 export interface OrdemServico {
   id: string
-  numero_os: number
+  numero_os: string
   data_os: string
   viatura_id: string
   tipo_revisao: string
   km_na_revisao: number
+  horas_motor_na_revisao: number | null
   descricao_servico: string | null
   custo_kz: number | null
   tecnico: string | null
   status: 'Aberta' | 'Em Curso' | 'Concluída' | 'Cancelada'
+  localizacao: 'Luanda' | 'Lubango' | 'Lobito'
+  tipo_os: 'Interna' | 'Cliente'
   observacoes: string | null
   created_at: string
-  // Joined
   viatura?: Viatura
 }
 
@@ -81,7 +83,6 @@ export interface CicloRevisao {
   tipo_revisao: string
 }
 
-// View types
 export interface EstadoContrato {
   cliente_id: string
   cliente_nome: string
@@ -89,7 +90,9 @@ export interface EstadoContrato {
   matricula: string | null
   vin: string
   marca: string
+  modelo: string | null
   km_inicial: number | null
+  horas_motor_segundos: number | null
   contrato_id: string
   data_inicio: string
   duracao_meses: number
@@ -101,6 +104,7 @@ export interface EstadoContrato {
   ultima_revisao_data: string | null
   tipo_ultima_revisao: string | null
   km_actual: number | null
+  horas_motor_actual: number | null
   proxima_revisao_data: string | null
   proxima_revisao_km: number | null
   dias_ate_proxima_revisao: number | null
@@ -139,29 +143,4 @@ export interface ResumoCliente {
   total_contratos: number
   contratos_ativos: number
   receita_mensal_usd: number
-}
-
-// Form types
-export interface ContratoForm {
-  cliente_id: string
-  viatura_id: string
-  data_inicio: string
-  duracao_meses: number
-  intervalo_km_revisao: number
-  valor_mensal_usd: number | null
-  km_anuais_contratados: number
-  km_total_contratados: number
-  observacoes?: string
-}
-
-export interface OSForm {
-  viatura_id: string
-  data_os: string
-  tipo_revisao: string
-  km_na_revisao: number
-  descricao_servico?: string
-  custo_kz?: number
-  tecnico?: string
-  status: string
-  observacoes?: string
 }
