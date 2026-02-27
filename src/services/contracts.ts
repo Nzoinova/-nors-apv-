@@ -1,11 +1,11 @@
 import { supabase } from '@/lib/supabase'
-import type { Contrato, ContratoForm } from '@/types'
+import type { Contrato, EstadoContrato, DashboardKPIs, Alerta } from '@/types'
 
-export async function getContratos(): Promise<Contrato[]> {
+export async function getContratos(): Promise<EstadoContrato[]> {
   const { data, error } = await supabase
-    .from('contratos')
-    .select('*, viatura:viaturas(id, matricula, vin, marca), cliente:clientes(id, nome)')
-    .order('data_inicio', { ascending: false })
+    .from('v_estado_contratos')
+    .select('*')
+    .order('cliente_nome')
   if (error) throw error
   return data || []
 }
@@ -13,31 +13,53 @@ export async function getContratos(): Promise<Contrato[]> {
 export async function getContrato(id: string): Promise<Contrato> {
   const { data, error } = await supabase
     .from('contratos')
-    .select('*, viatura:viaturas(id, matricula, vin, marca, km_inicial), cliente:clientes(id, nome)')
+    .select('*, viatura:viaturas(*, cliente:clientes(*)), cliente:clientes(*)')
     .eq('id', id)
     .single()
   if (error) throw error
   return data
 }
 
-export async function getContratosByCliente(clienteId: string): Promise<Contrato[]> {
+export async function getDashboardKPIs(): Promise<DashboardKPIs> {
   const { data, error } = await supabase
-    .from('contratos')
-    .select('*, viatura:viaturas(id, matricula, vin, marca)')
-    .eq('cliente_id', clienteId)
-    .order('data_inicio', { ascending: false })
+    .from('v_dashboard_kpis')
+    .select('*')
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function getAlertas(): Promise<Alerta[]> {
+  const { data, error } = await supabase
+    .from('v_alertas')
+    .select('*')
   if (error) throw error
   return data || []
 }
 
-export async function createContrato(form: ContratoForm): Promise<Contrato> {
+export async function createContrato(form: {
+  cliente_id: string
+  viatura_id: string
+  data_inicio: string
+  duracao_meses: number
+  intervalo_km_revisao: number
+  valor_mensal_usd: number | null
+  km_anuais_contratados: number
+  km_total_contratados: number
+  observacoes?: string
+}): Promise<Contrato> {
+  const dataInicio = new Date(form.data_inicio)
+  const dataValidade = new Date(dataInicio)
+  dataValidade.setMonth(dataValidade.getMonth() + form.duracao_meses)
+
   const { data, error } = await supabase
     .from('contratos')
     .insert({
-      viatura_id: form.viatura_id,
       cliente_id: form.cliente_id,
+      viatura_id: form.viatura_id,
       data_inicio: form.data_inicio,
       duracao_meses: form.duracao_meses,
+      data_validade: dataValidade.toISOString().split('T')[0],
       intervalo_km_revisao: form.intervalo_km_revisao,
       valor_mensal_usd: form.valor_mensal_usd,
       km_anuais_contratados: form.km_anuais_contratados,
@@ -48,23 +70,4 @@ export async function createContrato(form: ContratoForm): Promise<Contrato> {
     .single()
   if (error) throw error
   return data
-}
-
-export async function updateContrato(id: string, updates: Partial<Contrato>): Promise<Contrato> {
-  const { data, error } = await supabase
-    .from('contratos')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single()
-  if (error) throw error
-  return data
-}
-
-export async function deleteContrato(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('contratos')
-    .delete()
-    .eq('id', id)
-  if (error) throw error
 }
