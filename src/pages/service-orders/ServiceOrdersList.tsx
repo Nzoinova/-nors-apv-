@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, RefreshCw } from 'lucide-react'
 import { getOrdensServico } from '@/services/service-orders'
-import { formatDate, formatNumber, formatKZ } from '@/utils/formatters'
+import { formatDate, formatNumber, formatKZ, formatHorasMotor } from '@/utils/formatters'
 import { TIPOS_REVISAO } from '@/utils/constants'
 
 export default function ServiceOrdersList() {
@@ -36,17 +36,19 @@ export default function ServiceOrdersList() {
         </Link>
       </div>
 
-      <div className="bg-white rounded-lg border border-nors-light-gray overflow-hidden">
+      <div className="bg-white rounded-lg border border-nors-light-gray overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-nors-black text-white text-xs font-extrabold uppercase">
-              <th className="text-left px-4 py-3">Nº</th>
+              <th className="text-left px-4 py-3">Nº OS</th>
               <th className="text-center px-4 py-3">Data</th>
               <th className="text-left px-4 py-3">Cliente</th>
               <th className="text-left px-4 py-3">Matrícula</th>
               <th className="text-center px-4 py-3">Tipo</th>
               <th className="text-left px-4 py-3">Descrição</th>
               <th className="text-right px-4 py-3">KM</th>
+              <th className="text-right px-4 py-3">Motor</th>
+              <th className="text-center px-4 py-3">Local</th>
               <th className="text-right px-4 py-3">Custo KZ</th>
               <th className="text-center px-4 py-3">Status</th>
             </tr>
@@ -69,6 +71,8 @@ export default function ServiceOrdersList() {
                     {os.descricao_servico || TIPOS_REVISAO[os.tipo_revisao] || '—'}
                   </td>
                   <td className="px-4 py-2.5 text-xs text-right">{formatNumber(os.km_na_revisao)}</td>
+                  <td className="px-4 py-2.5 text-xs text-right">{formatHorasMotor(os.horas_motor_na_revisao)}</td>
+                  <td className="px-4 py-2.5 text-xs text-center">{os.localizacao || '—'}</td>
                   <td className="px-4 py-2.5 text-xs text-right">{os.custo_kz ? formatKZ(os.custo_kz) : '—'}</td>
                   <td className="px-4 py-2.5 text-center">
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
