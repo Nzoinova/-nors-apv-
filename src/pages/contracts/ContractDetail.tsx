@@ -4,7 +4,7 @@ import { ArrowLeft, RefreshCw } from 'lucide-react'
 import { getContrato } from '@/services/contracts'
 import { getOSByViatura } from '@/services/service-orders'
 import { StatusBadge } from '@/components/shared/StatusBadge'
-import { formatUSD, formatKZ, formatDate, formatNumber } from '@/utils/formatters'
+import { formatUSD, formatKZ, formatDate, formatNumber, formatHorasMotor } from '@/utils/formatters'
 import { TIPOS_REVISAO } from '@/utils/constants'
 import { getConfig } from '@/services/config'
 
@@ -46,6 +46,7 @@ export default function ContractDetail() {
     (new Date(contrato.data_validade).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
   )
   const status = diasRestantes < 0 ? 'EXPIRADO' : diasRestantes <= 60 ? 'A RENOVAR' : 'ATIVO'
+  const viatura = contrato.viatura as any
 
   return (
     <div className="space-y-6">
@@ -59,13 +60,12 @@ export default function ContractDetail() {
             {(contrato.cliente as any)?.nome?.split(' - ')[0] || 'Cliente'}
           </h1>
           <p className="text-sm font-light text-nors-dark-gray mt-1">
-            {(contrato.viatura as any)?.matricula || (contrato.viatura as any)?.vin} — {(contrato.viatura as any)?.marca}
+            {viatura?.matricula || viatura?.vin} — {viatura?.marca}
           </p>
         </div>
         <StatusBadge status={status} />
       </div>
 
-      {/* Info Grid */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-white rounded-lg border border-nors-light-gray p-4 space-y-3">
           <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray">Contrato</h3>
@@ -88,9 +88,10 @@ export default function ContractDetail() {
         </div>
 
         <div className="bg-white rounded-lg border border-nors-light-gray p-4 space-y-3">
-          <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray">Quilometragem</h3>
+          <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray">Quilometragem & Motor</h3>
           <div className="space-y-2 text-sm">
-            <Row label="KM Inicial" value={formatNumber((contrato.viatura as any)?.km_inicial)} />
+            <Row label="KM Inicial" value={formatNumber(viatura?.km_inicial)} />
+            <Row label="Horas Motor" value={formatHorasMotor(viatura?.horas_motor_segundos)} />
             <Row label="Intervalo revisão" value={formatNumber(contrato.intervalo_km_revisao) + ' km'} />
             <Row label="KM/Ano contratados" value={formatNumber(contrato.km_anuais_contratados)} />
             <Row label="KM total contratados" value={formatNumber(contrato.km_total_contratados)} />
@@ -98,18 +99,12 @@ export default function ContractDetail() {
         </div>
       </div>
 
-      {/* Histórico de OS */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-extrabold uppercase tracking-wide text-nors-dark-gray">
             Histórico de Serviço ({ordensServico?.length || 0} OS)
           </h2>
-          <Link
-            to="/os/nova"
-            className="text-xs text-nors-teal hover:underline font-semibold"
-          >
-            + Nova OS
-          </Link>
+          <Link to="/os/nova" className="text-xs text-nors-teal hover:underline font-semibold">+ Nova OS</Link>
         </div>
 
         <div className="bg-white rounded-lg border border-nors-light-gray overflow-hidden">
@@ -120,6 +115,7 @@ export default function ContractDetail() {
                 <th className="text-center px-4 py-3">Data</th>
                 <th className="text-center px-4 py-3">Tipo</th>
                 <th className="text-right px-4 py-3">KM</th>
+                <th className="text-right px-4 py-3">Motor</th>
                 <th className="text-left px-4 py-3">Descrição</th>
                 <th className="text-right px-4 py-3">Custo KZ</th>
                 <th className="text-center px-4 py-3">Status</th>
@@ -132,6 +128,7 @@ export default function ContractDetail() {
                   <td className="px-4 py-2.5 text-xs text-center">{formatDate(os.data_os)}</td>
                   <td className="px-4 py-2.5 text-xs text-center font-semibold">{os.tipo_revisao}</td>
                   <td className="px-4 py-2.5 text-xs text-right">{formatNumber(os.km_na_revisao)}</td>
+                  <td className="px-4 py-2.5 text-xs text-right">{formatHorasMotor(os.horas_motor_na_revisao)}</td>
                   <td className="px-4 py-2.5 text-xs">{os.descricao_servico || TIPOS_REVISAO[os.tipo_revisao] || '—'}</td>
                   <td className="px-4 py-2.5 text-xs text-right">{os.custo_kz ? formatKZ(os.custo_kz) : '—'}</td>
                   <td className="px-4 py-2.5 text-xs text-center">
@@ -148,7 +145,7 @@ export default function ContractDetail() {
               ))}
               {(!ordensServico || ordensServico.length === 0) && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-nors-light-gray-2 text-sm">
+                  <td colSpan={8} className="px-4 py-8 text-center text-gray-400 text-sm">
                     Sem ordens de serviço registadas
                   </td>
                 </tr>
