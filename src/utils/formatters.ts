@@ -34,3 +34,16 @@ export function formatPercent(value: number | null): string {
   if (value == null) return '—'
   return value.toFixed(1) + '%'
 }
+
+export function formatHorasMotor(segundos: number | null): string {
+  if (segundos == null) return '—'
+  const horas = Math.floor(segundos / 3600)
+  return formatNumber(horas) + ' h'
+}
+
+export function formatHorasMotorCompleto(segundos: number | null): string {
+  if (segundos == null) return '—'
+  const horas = Math.floor(segundos / 3600)
+  const minutos = Math.floor((segundos % 3600) / 60)
+  return `${formatNumber(horas)}h ${minutos}m (${formatNumber(segundos)} s)`
+}
