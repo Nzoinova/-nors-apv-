@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { RefreshCw } from 'lucide-react'
+import { Plus, RefreshCw } from 'lucide-react'
 import { getResumoClientes } from '@/services/clients'
 import { formatUSD } from '@/utils/formatters'
 
@@ -20,11 +20,19 @@ export default function ClientsList() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-extrabold tracking-tight">Clientes</h1>
-        <p className="text-sm font-light text-nors-dark-gray mt-1">
-          {clientes?.length || 0} clientes activos
-        </p>
+      <div className="flex items-end justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight">Clientes</h1>
+          <p className="text-sm font-light text-nors-dark-gray mt-1">
+            {clientes?.length || 0} clientes activos
+          </p>
+        </div>
+        <Link
+          to="/clientes/novo"
+          className="inline-flex items-center gap-2 bg-nors-teal text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-nors-teal/90 transition-colors"
+        >
+          <Plus size={16} /> Novo Cliente
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
@@ -43,23 +51,26 @@ export default function ClientsList() {
               </Link>
             </div>
             <div className="flex gap-8 mt-4">
-              <Stat label="Viaturas" value={c.total_viaturas} />
-              <Stat label="Contratos" value={c.total_contratos} />
-              <Stat label="Activos" value={c.contratos_ativos} accent />
-              <Stat label="Receita/Mês" value={formatUSD(c.receita_mensal_usd)} accent />
+              <div>
+                <p className="text-[10px] font-light uppercase tracking-wide text-gray-400">Viaturas</p>
+                <p className="text-lg font-extrabold">{c.total_viaturas}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-light uppercase tracking-wide text-gray-400">Contratos</p>
+                <p className="text-lg font-extrabold">{c.total_contratos}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-light uppercase tracking-wide text-gray-400">Activos</p>
+                <p className="text-lg font-extrabold text-nors-teal">{c.contratos_ativos}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-light uppercase tracking-wide text-gray-400">Receita/Mês</p>
+                <p className="text-lg font-extrabold text-nors-teal">{formatUSD(c.receita_mensal_usd)}</p>
+              </div>
             </div>
           </div>
         ))}
       </div>
-    </div>
-  )
-}
-
-function Stat({ label, value, accent }: { label: string; value: string | number; accent?: boolean }) {
-  return (
-    <div>
-      <p className="text-[10px] font-light uppercase tracking-wide text-nors-light-gray-2">{label}</p>
-      <p className={`text-lg font-extrabold ${accent ? 'text-nors-teal' : 'text-nors-black'}`}>{value}</p>
     </div>
   )
 }
