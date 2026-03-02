@@ -11,10 +11,11 @@ export function Layout() {
   })
 
   const highPriorityCount = alertas?.filter(a => a.prioridade === 'ALTA').length || 0
+  const totalAlerts = alertas?.length || 0
 
   return (
     <div className="min-h-screen bg-nors-off-white">
-      <Sidebar alertCount={highPriorityCount} />
+      <Sidebar alertCount={highPriorityCount} totalAlerts={totalAlerts} />
       <main className="ml-56 p-6">
         <Outlet />
       </main>
