@@ -40,14 +40,16 @@ export default function ClientsList() {
           <div key={c.cliente_id} className="bg-white rounded-lg border border-nors-light-gray p-5">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-extrabold text-lg tracking-tight">{c.cliente_nome.split(' - ')[0]}</h3>
+                <Link to={`/clientes/${c.cliente_id}`} className="hover:underline">
+                  <h3 className="font-extrabold text-lg tracking-tight text-nors-teal">{c.cliente_nome.split(' - ')[0]}</h3>
+                </Link>
                 <p className="text-xs text-nors-dark-gray font-light mt-0.5">{c.cliente_nome}</p>
               </div>
               <Link
-                to={`/contratos?cliente=${c.cliente_id}`}
+                to={`/clientes/${c.cliente_id}`}
                 className="text-xs text-nors-teal hover:underline font-semibold"
               >
-                Ver contratos →
+                Ver detalhe →
               </Link>
             </div>
             <div className="flex gap-8 mt-4">
