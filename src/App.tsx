@@ -10,8 +10,10 @@ import VehicleForm from '@/pages/vehicles/VehicleForm'
 import VehicleDetail from '@/pages/vehicles/VehicleDetail'
 import ServiceOrdersList from '@/pages/service-orders/ServiceOrdersList'
 import ServiceOrderForm from '@/pages/service-orders/ServiceOrderForm'
+import ServiceOrderDetail from '@/pages/service-orders/ServiceOrderDetail'
 import ClientsList from '@/pages/clients/ClientsList'
 import ClientForm from '@/pages/clients/ClientForm'
+import ClientDetail from '@/pages/clients/ClientDetail'
 import Settings from '@/pages/settings/Settings'
 
 const queryClient = new QueryClient({
@@ -38,8 +40,10 @@ export default function App() {
             <Route path="/viaturas/:id" element={<VehicleDetail />} />
             <Route path="/os" element={<ServiceOrdersList />} />
             <Route path="/os/nova" element={<ServiceOrderForm />} />
+            <Route path="/os/:id" element={<ServiceOrderDetail />} />
             <Route path="/clientes" element={<ClientsList />} />
             <Route path="/clientes/novo" element={<ClientForm />} />
+            <Route path="/clientes/:id" element={<ClientDetail />} />
             <Route path="/configuracoes" element={<Settings />} />
           </Route>
         </Routes>
