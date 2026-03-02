@@ -20,9 +20,10 @@ const NAV_ITEMS = [
 
 interface SidebarProps {
   alertCount?: number
+  totalAlerts?: number
 }
 
-export function Sidebar({ alertCount = 0 }: SidebarProps) {
+export function Sidebar({ alertCount = 0, totalAlerts = 0 }: SidebarProps) {
   return (
     <aside className="fixed top-0 left-0 h-screen w-56 bg-nors-black flex flex-col z-30">
       {/* Logo */}
@@ -32,6 +33,25 @@ export function Sidebar({ alertCount = 0 }: SidebarProps) {
           Gestão APV
         </p>
       </div>
+
+      {/* Alert Banner */}
+      {alertCount > 0 && (
+        <div className="mx-3 mb-3 bg-red-500/15 border border-red-500/30 rounded-lg px-3 py-2">
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={14} className="text-red-400 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold text-red-300">
+                {alertCount} alerta{alertCount > 1 ? 's' : ''} urgente{alertCount > 1 ? 's' : ''}
+              </p>
+              {totalAlerts > alertCount && (
+                <p className="text-[9px] text-red-400/70 font-light">
+                  {totalAlerts} total
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Navigation */}
       <nav className="flex-1 px-3 space-y-0.5">
