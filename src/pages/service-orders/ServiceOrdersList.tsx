@@ -58,7 +58,9 @@ export default function ServiceOrdersList() {
               const viatura = os.viatura as any
               return (
                 <tr key={os.id} className="hover:bg-nors-off-white even:bg-nors-off-white/50">
-                  <td className="px-4 py-2.5 text-xs font-mono font-semibold">{os.numero_os}</td>
+                  <td className="px-4 py-2.5 text-xs font-mono font-semibold">
+                    <Link to={`/os/${os.id}`} className="text-nors-teal hover:underline">{os.numero_os}</Link>
+                  </td>
                   <td className="px-4 py-2.5 text-xs text-center">{formatDate(os.data_os)}</td>
                   <td className="px-4 py-2.5 text-xs truncate max-w-[140px]">
                     {viatura?.cliente?.nome?.split(' - ')[0] || '—'}
