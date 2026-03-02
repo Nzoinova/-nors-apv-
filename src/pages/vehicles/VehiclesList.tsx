@@ -27,10 +27,7 @@ export default function VehiclesList() {
             {viaturas?.length || 0} viaturas registadas
           </p>
         </div>
-        <Link
-          to="/viaturas/nova"
-          className="inline-flex items-center gap-2 bg-nors-teal text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-nors-teal/90 transition-colors"
-        >
+        <Link to="/viaturas/nova" className="inline-flex items-center gap-2 bg-nors-teal text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-nors-teal/90 transition-colors">
           <Plus size={16} /> Nova Viatura
         </Link>
       </div>
@@ -52,7 +49,9 @@ export default function VehiclesList() {
             {(viaturas || []).map((v) => (
               <tr key={v.id} className="hover:bg-nors-off-white even:bg-nors-off-white/50">
                 <td className="px-4 py-2.5 text-xs font-mono font-semibold">
-                  {v.matricula || <span className="text-gray-400">Sem matrícula</span>}
+                  <Link to={`/viaturas/${v.id}`} className="text-nors-teal hover:underline">
+                    {v.matricula || 'Sem matrícula'}
+                  </Link>
                 </td>
                 <td className="px-4 py-2.5 text-xs font-mono text-nors-dark-gray">{v.vin}</td>
                 <td className="px-4 py-2.5 text-xs">{v.marca}</td>
