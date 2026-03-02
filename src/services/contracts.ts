@@ -71,3 +71,31 @@ export async function createContrato(form: {
   if (error) throw error
   return data
 }
+
+export async function updateContrato(id: string, form: {
+  data_inicio?: string
+  duracao_meses?: number
+  intervalo_km_revisao?: number
+  valor_mensal_usd?: number | null
+  km_anuais_contratados?: number
+  km_total_contratados?: number
+  observacoes?: string | null
+}): Promise<Contrato> {
+  const updates: Record<string, unknown> = { ...form }
+
+  if (form.data_inicio && form.duracao_meses) {
+    const dataInicio = new Date(form.data_inicio)
+    const dataValidade = new Date(dataInicio)
+    dataValidade.setMonth(dataValidade.getMonth() + form.duracao_meses)
+    updates.data_validade = dataValidade.toISOString().split('T')[0]
+  }
+
+  const { data, error } = await supabase
+    .from('contratos')
+    .update(updates)
+    .eq('id', id)
+    .select('*, viatura:viaturas(*, cliente:clientes(*)), cliente:clientes(*)')
+    .single()
+  if (error) throw error
+  return data
+}
