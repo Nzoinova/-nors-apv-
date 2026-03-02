@@ -7,6 +7,7 @@ import ContractDetail from '@/pages/contracts/ContractDetail'
 import ContractForm from '@/pages/contracts/ContractForm'
 import VehiclesList from '@/pages/vehicles/VehiclesList'
 import VehicleForm from '@/pages/vehicles/VehicleForm'
+import VehicleDetail from '@/pages/vehicles/VehicleDetail'
 import ServiceOrdersList from '@/pages/service-orders/ServiceOrdersList'
 import ServiceOrderForm from '@/pages/service-orders/ServiceOrderForm'
 import ClientsList from '@/pages/clients/ClientsList'
@@ -34,6 +35,7 @@ export default function App() {
             <Route path="/contratos/:id" element={<ContractDetail />} />
             <Route path="/viaturas" element={<VehiclesList />} />
             <Route path="/viaturas/nova" element={<VehicleForm />} />
+            <Route path="/viaturas/:id" element={<VehicleDetail />} />
             <Route path="/os" element={<ServiceOrdersList />} />
             <Route path="/os/nova" element={<ServiceOrderForm />} />
             <Route path="/clientes" element={<ClientsList />} />
