@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Save } from 'lucide-react'
+import { ArrowLeft, Save, Plus } from 'lucide-react'
 import { getClientes } from '@/services/clients'
 import { getViaturasByCliente } from '@/services/vehicles'
 import { createContrato } from '@/services/contracts'
@@ -65,17 +65,14 @@ export default function ContractForm() {
       <h1 className="text-2xl font-extrabold tracking-tight">Novo Contrato</h1>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Cliente */}
         <div>
-          <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
-            Cliente
-          </label>
-          <select
-            value={clienteId}
-            onChange={(e) => { setClienteId(e.target.value); setViaturaId('') }}
-            required
-            className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
-          >
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray">Cliente</label>
+            <Link to="/clientes/novo" className="inline-flex items-center gap-1 text-[10px] text-nors-teal hover:underline font-semibold">
+              <Plus size={10} /> Novo Cliente
+            </Link>
+          </div>
+          <select value={clienteId} onChange={(e) => { setClienteId(e.target.value); setViaturaId('') }} required className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30">
             <option value="">Seleccionar cliente...</option>
             {(clientes || []).map(c => (
               <option key={c.id} value={c.id}>{c.nome}</option>
@@ -83,129 +80,69 @@ export default function ContractForm() {
           </select>
         </div>
 
-        {/* Viatura */}
         <div>
-          <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
-            Viatura
-          </label>
-          <select
-            value={viaturaId}
-            onChange={(e) => setViaturaId(e.target.value)}
-            required
-            disabled={!clienteId}
-            className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30 disabled:opacity-50"
-          >
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray">Viatura</label>
+            <Link to="/viaturas/nova" className="inline-flex items-center gap-1 text-[10px] text-nors-teal hover:underline font-semibold">
+              <Plus size={10} /> Nova Viatura
+            </Link>
+          </div>
+          <select value={viaturaId} onChange={(e) => setViaturaId(e.target.value)} required disabled={!clienteId} className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30 disabled:opacity-50">
             <option value="">{clienteId ? 'Seleccionar viatura...' : 'Seleccione um cliente primeiro'}</option>
             {(viaturas || []).map(v => (
-              <option key={v.id} value={v.id}>
-                {v.matricula || 'S/Mat'} — {v.vin} ({v.marca})
-              </option>
+              <option key={v.id} value={v.id}>{v.matricula || 'S/Mat'} — {v.vin} ({v.marca})</option>
             ))}
           </select>
+          {clienteId && viaturas && viaturas.length === 0 && (
+            <p className="text-xs text-amber-600 mt-1.5">
+              Este cliente não tem viaturas registadas. <Link to="/viaturas/nova" className="text-nors-teal underline font-semibold">Adicionar viatura primeiro →</Link>
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
-              Data Início
-            </label>
-            <input
-              type="date"
-              value={dataInicio}
-              onChange={(e) => setDataInicio(e.target.value)}
-              required
-              className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
-            />
+            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">Data Início</label>
+            <input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} required className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30" />
           </div>
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
-              Duração (meses)
-            </label>
-            <input
-              type="number"
-              value={duracaoMeses}
-              onChange={(e) => setDuracaoMeses(parseInt(e.target.value) || 24)}
-              min={1}
-              className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
-            />
+            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">Duração (meses)</label>
+            <input type="number" value={duracaoMeses} onChange={(e) => setDuracaoMeses(parseInt(e.target.value) || 24)} min={1} className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30" />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
-              Valor Mensal (USD)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              value={valorMensal}
-              onChange={(e) => setValorMensal(e.target.value)}
-              placeholder="Ex: 385.00"
-              className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
-            />
+            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">Valor Mensal (USD)</label>
+            <input type="number" step="0.01" value={valorMensal} onChange={(e) => setValorMensal(e.target.value)} placeholder="Ex: 385.00" className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30" />
           </div>
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
-              Intervalo KM Revisão
-            </label>
-            <input
-              type="number"
-              value={intervaloKm}
-              onChange={(e) => setIntervaloKm(parseInt(e.target.value) || 15000)}
-              className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
-            />
+            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">Intervalo KM Revisão</label>
+            <input type="number" value={intervaloKm} onChange={(e) => setIntervaloKm(parseInt(e.target.value) || 15000)} className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30" />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
-              KM Anuais Contratados
-            </label>
-            <input
-              type="number"
-              value={kmAnuais}
-              onChange={(e) => setKmAnuais(parseInt(e.target.value) || 60000)}
-              className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
-            />
+            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">KM Anuais Contratados</label>
+            <input type="number" value={kmAnuais} onChange={(e) => setKmAnuais(parseInt(e.target.value) || 60000)} className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30" />
           </div>
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
-              KM Total Contratados
-            </label>
-            <input
-              type="number"
-              value={kmTotal}
-              onChange={(e) => setKmTotal(parseInt(e.target.value) || 120000)}
-              className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
-            />
+            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">KM Total Contratados</label>
+            <input type="number" value={kmTotal} onChange={(e) => setKmTotal(parseInt(e.target.value) || 120000)} className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30" />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
-            Observações
-          </label>
-          <textarea
-            value={obs}
-            onChange={(e) => setObs(e.target.value)}
-            rows={3}
-            className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
-          />
+          <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">Observações</label>
+          <textarea value={obs} onChange={(e) => setObs(e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30" />
         </div>
 
         {mutation.error && (
-          <div className="bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm">
-            Erro: {(mutation.error as Error).message}
-          </div>
+          <div className="bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm">Erro: {(mutation.error as Error).message}</div>
         )}
 
-        <button
-          type="submit"
-          disabled={mutation.isPending || !clienteId || !viaturaId}
-          className="inline-flex items-center gap-2 bg-nors-teal text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-nors-teal/90 transition-colors disabled:opacity-50"
-        >
+        <button type="submit" disabled={mutation.isPending || !clienteId || !viaturaId} className="inline-flex items-center gap-2 bg-nors-teal text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-nors-teal/90 transition-colors disabled:opacity-50">
           <Save size={16} />
           {mutation.isPending ? 'A guardar...' : 'Criar Contrato'}
         </button>
