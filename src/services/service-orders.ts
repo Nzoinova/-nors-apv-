@@ -68,12 +68,12 @@ export async function createOS(form: {
   return data
 }
 
-export async function updateOSStatus(id: string, status: string): Promise<OrdemServico> {
+export async function updateOS(id: string, updates: Record<string, unknown>): Promise<OrdemServico> {
   const { data, error } = await supabase
     .from('ordens_servico')
-    .update({ status })
+    .update(updates)
     .eq('id', id)
-    .select()
+    .select('*, viatura:viaturas(id, matricula, vin, marca, cliente_id, cliente:clientes(id, nome))')
     .single()
   if (error) throw error
   return data
