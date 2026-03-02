@@ -1,15 +1,20 @@
+import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, RefreshCw } from 'lucide-react'
-import { getContrato } from '@/services/contracts'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { ArrowLeft, RefreshCw, Pencil, X, Save } from 'lucide-react'
+import { getContrato, updateContrato } from '@/services/contracts'
 import { getOSByViatura } from '@/services/service-orders'
 import { StatusBadge } from '@/components/shared/StatusBadge'
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { formatUSD, formatKZ, formatDate, formatNumber, formatHorasMotor } from '@/utils/formatters'
 import { TIPOS_REVISAO } from '@/utils/constants'
 import { getConfig } from '@/services/config'
 
 export default function ContractDetail() {
   const { id } = useParams<{ id: string }>()
+  const queryClient = useQueryClient()
+  const [editing, setEditing] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
 
   const { data: contrato, isLoading } = useQuery({
     queryKey: ['contrato', id],
@@ -27,6 +32,47 @@ export default function ContractDetail() {
     queryKey: ['config'],
     queryFn: getConfig,
   })
+
+  const [editValorMensal, setEditValorMensal] = useState('')
+  const [editDuracao, setEditDuracao] = useState('')
+  const [editIntervaloKm, setEditIntervaloKm] = useState('')
+  const [editKmAnuais, setEditKmAnuais] = useState('')
+  const [editKmTotal, setEditKmTotal] = useState('')
+  const [editObs, setEditObs] = useState('')
+
+  function startEdit() {
+    if (!contrato) return
+    setEditValorMensal(contrato.valor_mensal_usd?.toString() || '')
+    setEditDuracao(contrato.duracao_meses.toString())
+    setEditIntervaloKm(contrato.intervalo_km_revisao.toString())
+    setEditKmAnuais(contrato.km_anuais_contratados.toString())
+    setEditKmTotal(contrato.km_total_contratados.toString())
+    setEditObs(contrato.observacoes || '')
+    setEditing(true)
+  }
+
+  const mutation = useMutation({
+    mutationFn: (updates: Record<string, unknown>) => updateContrato(id!, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contrato', id] })
+      queryClient.invalidateQueries({ queryKey: ['estado-contratos'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-kpis'] })
+      setEditing(false)
+      setShowConfirm(false)
+    },
+  })
+
+  function handleSave() {
+    mutation.mutate({
+      valor_mensal_usd: editValorMensal ? parseFloat(editValorMensal) : null,
+      duracao_meses: parseInt(editDuracao) || contrato!.duracao_meses,
+      data_inicio: contrato!.data_inicio,
+      intervalo_km_revisao: parseInt(editIntervaloKm) || contrato!.intervalo_km_revisao,
+      km_anuais_contratados: parseInt(editKmAnuais) || contrato!.km_anuais_contratados,
+      km_total_contratados: parseInt(editKmTotal) || contrato!.km_total_contratados,
+      observacoes: editObs || null,
+    })
+  }
 
   if (isLoading) {
     return (
@@ -50,6 +96,15 @@ export default function ContractDetail() {
 
   return (
     <div className="space-y-6">
+      <ConfirmDialog
+        open={showConfirm}
+        title="Guardar alterações?"
+        message="Tem a certeza que deseja guardar as alterações ao contrato?"
+        confirmLabel="Guardar"
+        onConfirm={handleSave}
+        onCancel={() => setShowConfirm(false)}
+      />
+
       <Link to="/contratos" className="inline-flex items-center gap-1.5 text-sm text-nors-teal hover:underline">
         <ArrowLeft size={16} /> Voltar a Contratos
       </Link>
@@ -63,15 +118,39 @@ export default function ContractDetail() {
             {viatura?.matricula || viatura?.vin} — {viatura?.marca}
           </p>
         </div>
-        <StatusBadge status={status} />
+        <div className="flex items-center gap-3">
+          <StatusBadge status={status} />
+          {!editing ? (
+            <button onClick={startEdit} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-nors-light-gray hover:bg-nors-off-white transition-colors">
+              <Pencil size={14} /> Editar
+            </button>
+          ) : (
+            <div className="flex gap-2">
+              <button onClick={() => setEditing(false)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-nors-light-gray hover:bg-nors-off-white transition-colors">
+                <X size={14} /> Cancelar
+              </button>
+              <button onClick={() => setShowConfirm(true)} disabled={mutation.isPending} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-nors-teal text-white hover:bg-nors-teal/90 transition-colors disabled:opacity-50">
+                <Save size={14} /> {mutation.isPending ? 'A guardar...' : 'Guardar'}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
+
+      {mutation.error && (
+        <div className="bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm">Erro: {(mutation.error as Error).message}</div>
+      )}
 
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-white rounded-lg border border-nors-light-gray p-4 space-y-3">
           <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray">Contrato</h3>
           <div className="space-y-2 text-sm">
             <Row label="Início" value={formatDate(contrato.data_inicio)} />
-            <Row label="Duração" value={`${contrato.duracao_meses} meses`} />
+            {editing ? (
+              <EditRow label="Duração (meses)" value={editDuracao} onChange={setEditDuracao} type="number" />
+            ) : (
+              <Row label="Duração" value={`${contrato.duracao_meses} meses`} />
+            )}
             <Row label="Validade" value={formatDate(contrato.data_validade)} />
             <Row label="Dias restantes" value={`${diasRestantes}`} bold />
           </div>
@@ -80,7 +159,11 @@ export default function ContractDetail() {
         <div className="bg-white rounded-lg border border-nors-light-gray p-4 space-y-3">
           <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray">Financeiro</h3>
           <div className="space-y-2 text-sm">
-            <Row label="Mensal USD" value={formatUSD(contrato.valor_mensal_usd)} bold />
+            {editing ? (
+              <EditRow label="Mensal USD" value={editValorMensal} onChange={setEditValorMensal} type="number" step="0.01" />
+            ) : (
+              <Row label="Mensal USD" value={formatUSD(contrato.valor_mensal_usd)} bold />
+            )}
             <Row label="Mensal KZ" value={formatKZ(valorKZ)} />
             <Row label="Anual USD" value={contrato.valor_mensal_usd ? formatUSD(contrato.valor_mensal_usd * 12) : '—'} />
             <Row label="Total contrato" value={contrato.valor_mensal_usd ? formatUSD(contrato.valor_mensal_usd * contrato.duracao_meses) : '—'} />
@@ -92,12 +175,29 @@ export default function ContractDetail() {
           <div className="space-y-2 text-sm">
             <Row label="KM Inicial" value={formatNumber(viatura?.km_inicial)} />
             <Row label="Horas Motor" value={formatHorasMotor(viatura?.horas_motor_segundos)} />
-            <Row label="Intervalo revisão" value={formatNumber(contrato.intervalo_km_revisao) + ' km'} />
-            <Row label="KM/Ano contratados" value={formatNumber(contrato.km_anuais_contratados)} />
-            <Row label="KM total contratados" value={formatNumber(contrato.km_total_contratados)} />
+            {editing ? (
+              <>
+                <EditRow label="Intervalo revisão (km)" value={editIntervaloKm} onChange={setEditIntervaloKm} type="number" />
+                <EditRow label="KM/Ano contratados" value={editKmAnuais} onChange={setEditKmAnuais} type="number" />
+                <EditRow label="KM total contratados" value={editKmTotal} onChange={setEditKmTotal} type="number" />
+              </>
+            ) : (
+              <>
+                <Row label="Intervalo revisão" value={formatNumber(contrato.intervalo_km_revisao) + ' km'} />
+                <Row label="KM/Ano contratados" value={formatNumber(contrato.km_anuais_contratados)} />
+                <Row label="KM total contratados" value={formatNumber(contrato.km_total_contratados)} />
+              </>
+            )}
           </div>
         </div>
       </div>
+
+      {editing && (
+        <div className="bg-white rounded-lg border border-nors-light-gray p-4 space-y-2">
+          <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray">Observações</h3>
+          <textarea value={editObs} onChange={(e) => setEditObs(e.target.value)} rows={2} className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30" />
+        </div>
+      )}
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -144,11 +244,7 @@ export default function ContractDetail() {
                 </tr>
               ))}
               {(!ordensServico || ordensServico.length === 0) && (
-                <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-gray-400 text-sm">
-                    Sem ordens de serviço registadas
-                  </td>
-                </tr>
+                <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400 text-sm">Sem ordens de serviço registadas</td></tr>
               )}
             </tbody>
           </table>
@@ -160,9 +256,18 @@ export default function ContractDetail() {
 
 function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
-    <div className="flex justify-between">
+    <div className="flex justify-between items-center">
       <span className="text-nors-dark-gray font-light">{label}</span>
       <span className={bold ? 'font-semibold' : ''}>{value}</span>
+    </div>
+  )
+}
+
+function EditRow({ label, value, onChange, type = 'text', step }: { label: string; value: string; onChange: (v: string) => void; type?: string; step?: string }) {
+  return (
+    <div className="flex justify-between items-center gap-3">
+      <span className="text-nors-dark-gray font-light text-xs whitespace-nowrap">{label}</span>
+      <input type={type} step={step} value={value} onChange={(e) => onChange(e.target.value)} className="w-28 px-2 py-1 rounded border border-nors-teal/30 text-xs text-right focus:outline-none focus:ring-2 focus:ring-nors-teal/30" />
     </div>
   )
 }
