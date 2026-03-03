@@ -26,6 +26,9 @@ export const STATUS_CONTRATO_COLORS: Record<string, { bg: string; text: string }
   ATIVO: { bg: 'bg-emerald-50', text: 'text-emerald-700' },
   'A RENOVAR': { bg: 'bg-amber-50', text: 'text-amber-700' },
   EXPIRADO: { bg: 'bg-red-50', text: 'text-red-700' },
+  CORTESIA: { bg: 'bg-blue-50', text: 'text-blue-700' },
+  FECHADO: { bg: 'bg-gray-100', text: 'text-gray-600' },
+}
 }
 
 export const PRIORIDADE_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
