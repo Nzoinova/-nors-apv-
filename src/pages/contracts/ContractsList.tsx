@@ -1,13 +1,13 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, RefreshCw, Search, ChevronDown, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { getEstadoContratos } from '@/services/dashboard'
 import { StatusBadge } from '@/components/shared/StatusBadge'
-import { formatUSD, formatKZ, formatDate, formatNumber, formatPercent } from '@/utils/formatters'
+import { formatUSD, formatKZ, formatDate } from '@/utils/formatters'
 import type { EstadoContrato } from '@/types'
 
-type SortKey = 'matricula' | 'marca' | 'data_inicio' | 'data_validade' | 'valor_mensal_usd' | 'km_actual' | 'pct_km_consumido' | 'dias_ate_expiracao'
+type SortKey = 'matricula' | 'marca' | 'data_validade' | 'valor_mensal_usd' | 'dias_ate_expiracao'
 type SortDir = 'asc' | 'desc'
 type TipoFilter = 'ALL' | 'APV' | 'CM'
 
@@ -29,6 +29,7 @@ export default function ContractsList() {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   const [sortKey, setSortKey] = useState<SortKey>('dias_ate_expiracao')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
+  const initialCollapseSet = useRef(false)
 
   const { data: contratos, isLoading } = useQuery({
     queryKey: ['estado-contratos'],
@@ -113,6 +114,13 @@ export default function ContractsList() {
     return Array.from(map.values()).sort((a, b) => a.shortName.localeCompare(b.shortName))
   }, [sorted])
 
+  useEffect(() => {
+    if (groups.length > 0 && !initialCollapseSet.current) {
+      initialCollapseSet.current = true
+      setCollapsed(new Set(groups.map(g => g.clienteId)))
+    }
+  }, [groups])
+
   function toggleCollapse(id: string) {
     setCollapsed(prev => {
       const next = new Set(prev)
@@ -155,9 +163,10 @@ export default function ContractsList() {
         </Link>
       </div>
 
-      {/* Tipo tabs */}
+      {/* Unified filter bar */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: '#D6D6D6' }}>
+        <div className="flex items-center rounded-lg overflow-hidden border" style={{ borderColor: '#D6D6D6' }}>
+          {/* Tipo tabs (primary, bolder) */}
           {(['ALL', 'APV', 'CM'] as const).map(t => (
             <button key={t} onClick={() => { setTipoFilter(t); setStatusFilter('ALL') }}
               className={`px-4 py-2 text-xs font-extrabold transition-colors flex items-center gap-1.5 ${tipoFilter === t ? 'text-white' : 'bg-white hover:bg-gray-50'}`}
@@ -169,18 +178,19 @@ export default function ContractsList() {
               </span>
             </button>
           ))}
-        </div>
 
-        {/* Status tabs */}
-        <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: '#D6D6D6' }}>
+          {/* Vertical divider */}
+          <div className="w-px self-stretch" style={{ backgroundColor: '#D6D6D6' }} />
+
+          {/* Status pills (secondary, lighter/smaller) */}
           {statusOptions.map(s => (
             <button key={s} onClick={() => setStatusFilter(s)}
-              className={`px-3 py-2 text-xs font-semibold transition-colors flex items-center gap-1.5 ${statusFilter === s ? 'text-white' : 'bg-white hover:bg-gray-50'}`}
-              style={statusFilter === s ? { backgroundColor: '#415A67' } : { color: '#575757' }}>
+              className={`px-2.5 py-1.5 text-[11px] font-medium transition-colors flex items-center gap-1 ${statusFilter === s ? 'text-white' : 'bg-white hover:bg-gray-50'}`}
+              style={statusFilter === s ? { backgroundColor: '#808080' } : { color: '#808080' }}>
               {s === 'ALL' ? 'Todos' : s}
               {(statusCounts[s] ?? 0) > 0 && (
-                <span className="text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center"
-                  style={statusFilter === s ? { backgroundColor: 'rgba(255,255,255,0.2)' } : { backgroundColor: '#F2F2F2', color: '#575757' }}>
+                <span className="text-[9px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center"
+                  style={statusFilter === s ? { backgroundColor: 'rgba(255,255,255,0.2)' } : { backgroundColor: '#F2F2F2', color: '#808080' }}>
                   {statusCounts[s]}
                 </span>
               )}
@@ -253,12 +263,8 @@ export default function ContractsList() {
                       <th className="text-left px-3 py-2 w-8">Tipo</th>
                       <ThSort label="Matrícula" column="matricula" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="left" />
                       <ThSort label="Modelo" column="marca" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="left" />
-                      <ThSort label="Início" column="data_inicio" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="center" />
                       <ThSort label="Validade" column="data_validade" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="center" />
                       <th className="text-right px-3 py-2">Valor</th>
-                      <th className="text-center px-3 py-2">Última</th>
-                      <th className="text-center px-3 py-2">Próxima</th>
-                      <ThSort label="KM" column="km_actual" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="right" />
                       <th className="text-center px-3 py-2">Status</th>
                       <ThSort label="Dias" column="dias_ate_expiracao" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="center" />
                     </tr>
@@ -278,7 +284,6 @@ export default function ContractsList() {
                           </Link>
                         </td>
                         <td className="px-3 py-2 text-xs">{c.modelo || c.marca}</td>
-                        <td className="px-3 py-2 text-xs text-center">{formatDate(c.data_inicio)}</td>
                         <td className="px-3 py-2 text-xs text-center">{formatDate(c.data_validade)}</td>
                         <td className="px-3 py-2 text-xs text-right font-semibold">
                           {c.tipo_contrato === 'APV'
@@ -286,9 +291,6 @@ export default function ContractsList() {
                             : (c.valor_total_kz ? formatKZ(c.valor_total_kz) : '—')
                           }
                         </td>
-                        <td className="px-3 py-2 text-xs text-center">{c.tipo_ultima_revisao || '—'}</td>
-                        <td className="px-3 py-2 text-xs text-center">{c.proxima_revisao_tipo || '—'}</td>
-                        <td className="px-3 py-2 text-xs text-right">{c.km_actual ? formatNumber(c.km_actual) : '—'}</td>
                         <td className="px-3 py-2 text-center">
                           <StatusBadge status={c.status_contrato} />
                         </td>
