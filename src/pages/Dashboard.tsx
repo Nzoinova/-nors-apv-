@@ -89,7 +89,9 @@ export default function Dashboard() {
         const d = new Date(c.data_validade)
         if (d.getFullYear() === year && d.getMonth() === month) {
           const day = d.getDate()
-          expirationDays.add(day)
+          if (c.tipo_contrato === 'APV') {
+            expirationDays.add(day)
+          }
           expirations.push({
             day,
             clienteNome: c.cliente_nome.split(' - ')[0],
@@ -138,7 +140,7 @@ export default function Dashboard() {
   const contratosProximos = useMemo(() => {
     if (!contratos) return []
     return contratos
-      .filter(c => c.status_contrato !== 'FECHADO')
+      .filter(c => c.tipo_contrato === 'APV' && c.status_contrato !== 'FECHADO')
       .sort((a, b) => a.dias_ate_expiracao - b.dias_ate_expiracao)
       .slice(0, 5)
   }, [contratos])
@@ -273,19 +275,31 @@ export default function Dashboard() {
           </div>
           {calendarData.expirations.length > 0 ? (
             <div className="mt-4 space-y-1.5 max-h-24 overflow-y-auto">
-              {calendarData.expirations.map((ev, i) => (
-                <Link
-                  key={i}
-                  to={`/contratos/${ev.contratoId}`}
-                  className="flex items-center gap-2 text-[11px] text-nors-dark-gray hover:text-nors-teal transition-colors"
-                >
-                  <span className="font-semibold text-nors-black whitespace-nowrap">
-                    {ev.day} {calendarData.monthLabel.split(' ')[0].slice(0, 3)}
-                  </span>
-                  <span className="truncate">{ev.clienteNome} ({ev.modelo || '—'})</span>
-                  <span className="text-nors-light-gray-2 whitespace-nowrap">— {ev.tipo} expira</span>
-                </Link>
-              ))}
+              {calendarData.expirations.map((ev, i) => {
+                const isAPV = ev.tipo === 'APV'
+                return (
+                  <Link
+                    key={i}
+                    to={`/contratos/${ev.contratoId}`}
+                    className={`flex items-center gap-2 text-[11px] transition-colors ${
+                      isAPV
+                        ? 'text-nors-dark-gray hover:text-nors-teal'
+                        : 'text-nors-light-gray-2 hover:text-nors-medium-gray'
+                    }`}
+                  >
+                    {isAPV && <span className="w-1.5 h-1.5 rounded-full bg-nors-teal flex-shrink-0" />}
+                    <span className={`whitespace-nowrap ${isAPV ? 'font-semibold text-nors-black' : 'font-light text-nors-medium-gray'}`}>
+                      {ev.day} {calendarData.monthLabel.split(' ')[0].slice(0, 3)}
+                    </span>
+                    <span className={`truncate ${isAPV ? '' : 'font-light'}`}>
+                      {ev.clienteNome} ({ev.modelo || '—'})
+                    </span>
+                    <span className={`whitespace-nowrap ${isAPV ? 'text-nors-light-gray-2' : 'text-nors-light-gray'}`}>
+                      — {ev.tipo} expira
+                    </span>
+                  </Link>
+                )
+              })}
             </div>
           ) : (
             <p className="mt-4 text-xs text-nors-light-gray-2 font-light text-center">Sem vencimentos este mês</p>

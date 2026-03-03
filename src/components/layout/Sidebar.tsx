@@ -30,7 +30,7 @@ export function Sidebar({ alertCount = 0, totalAlerts = 0 }: SidebarProps) {
       <div className="p-5 pb-6">
         <h1 className="text-white font-extrabold text-xl tracking-tight">NORS</h1>
         <p className="text-nors-light-gray-2 text-[10px] font-light uppercase tracking-widest mt-0.5">
-          Gestão APV
+          GESTÃO APV
         </p>
       </div>
 
