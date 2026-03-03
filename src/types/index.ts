@@ -115,7 +115,7 @@ export interface EstadoContrato {
   proxima_revisao_km: number | null
   dias_ate_proxima_revisao: number | null
   proxima_revisao_tipo: string | null
-  status_contrato: 'ATIVO' | 'A RENOVAR' | 'EXPIRADO'
+  status_contrato: 'ATIVO' | 'A RENOVAR' | 'EXPIRADO' | 'CORTESIA' | 'FECHADO'
   dias_ate_expiracao: number
   pct_km_consumido: number | null
   valor_mensal_kz: number

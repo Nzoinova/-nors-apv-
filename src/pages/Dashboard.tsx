@@ -19,6 +19,16 @@ const STATUS_COLORS: Record<string, string> = {
   ATIVO: '#415A67',
   'A RENOVAR': '#B2A06E',
   EXPIRADO: '#956C6D',
+  CORTESIA: '#3B82F6',
+  FECHADO: '#6B7280',
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  ATIVO: 'Activos',
+  'A RENOVAR': 'A Renovar',
+  EXPIRADO: 'Expirados',
+  CORTESIA: 'Cortesia',
+  FECHADO: 'Fechados',
 }
 
 const CHART_TEAL = '#415A67'
@@ -45,21 +55,29 @@ export default function Dashboard() {
   })
 
   const statusData = useMemo(() => {
-    if (!kpis) return []
-    return [
-      { name: 'Activos', value: kpis.contratos_ativos, color: STATUS_COLORS.ATIVO },
-      { name: 'A Renovar', value: kpis.contratos_a_renovar, color: STATUS_COLORS['A RENOVAR'] },
-      { name: 'Expirados', value: kpis.contratos_expirados, color: STATUS_COLORS.EXPIRADO },
-    ].filter(d => d.value > 0)
-  }, [kpis])
+    if (!contratos) return []
+    const counts: Record<string, number> = {}
+    contratos.forEach(c => {
+      counts[c.status_contrato] = (counts[c.status_contrato] || 0) + 1
+    })
+    return Object.entries(counts)
+      .filter(([, v]) => v > 0)
+      .map(([status, value]) => ({
+        name: STATUS_LABELS[status] || status,
+        value,
+        color: STATUS_COLORS[status] || '#9CA3AF',
+      }))
+  }, [contratos])
 
   const receitaPorCliente = useMemo(() => {
     if (!contratos) return []
     const agrupado: Record<string, number> = {}
-    contratos.forEach(c => {
-      const nome = c.cliente_nome.split(' - ')[0]
-      agrupado[nome] = (agrupado[nome] || 0) + (c.valor_mensal_usd || 0)
-    })
+    contratos
+      .filter(c => c.tipo_contrato === 'APV' && c.valor_mensal_usd && c.valor_mensal_usd > 0)
+      .forEach(c => {
+        const nome = c.cliente_nome.split(' - ')[0]
+        agrupado[nome] = (agrupado[nome] || 0) + c.valor_mensal_usd!
+      })
     return Object.entries(agrupado)
       .map(([nome, valor]) => ({ nome, valor: Math.round(valor) }))
       .sort((a, b) => b.valor - a.valor)
