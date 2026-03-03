@@ -101,6 +101,12 @@ export interface EstadoContrato {
   valor_mensal_usd: number | null
   km_anuais_contratados: number
   km_total_contratados: number
+  tipo_contrato: 'APV' | 'CM'
+  valor_total_kz: number | null
+  intervencoes_previstas: number | null
+  status_cm: string | null
+  motivo_fecho: string | null
+  data_fecho: string | null
   ultima_revisao_data: string | null
   tipo_ultima_revisao: string | null
   km_actual: number | null
@@ -125,6 +131,8 @@ export interface DashboardKPIs {
   receita_mensal_kz: number
   total_clientes: number
   total_marcas: number
+  total_apv: number
+  total_cm: number
 }
 
 export interface Alerta {
