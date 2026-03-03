@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import type { DashboardKPIs, Alerta, EstadoContrato } from '@/types'
+import { CM_ALERT_OVERRIDES } from '@/utils/constants'
 
 export async function getKPIs(): Promise<DashboardKPIs> {
   const { data, error } = await supabase
@@ -16,7 +17,13 @@ export async function getAlertas(): Promise<Alerta[]> {
     .select('*')
     .limit(20)
   if (error) throw error
-  return data || []
+  return (data || []).map(alerta => {
+    const override = CM_ALERT_OVERRIDES[alerta.tipo_alerta]
+    if (override) {
+      return { ...alerta, descricao: override.descricao, prioridade: override.prioridade }
+    }
+    return alerta
+  })
 }
 
 export async function getEstadoContratos(): Promise<EstadoContrato[]> {

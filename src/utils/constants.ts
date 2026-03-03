@@ -35,3 +35,15 @@ export const PRIORIDADE_COLORS: Record<string, { bg: string; text: string; dot: 
   MEDIA: { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500' },
   INFO: { bg: 'bg-blue-50', text: 'text-blue-700', dot: 'bg-blue-500' },
 }
+
+/** Frontend overrides for CM alert messages and priorities */
+export const CM_ALERT_OVERRIDES: Record<string, { descricao: string; prioridade: 'ALTA' | 'MEDIA' | 'INFO' }> = {
+  cm_expira_30: {
+    descricao: 'Acordo CM expira em breve — oportunidade de proposta APV',
+    prioridade: 'INFO',
+  },
+  cm_expirado: {
+    descricao: 'Acordo CM expirado — propor contrato APV?',
+    prioridade: 'INFO',
+  },
+}
