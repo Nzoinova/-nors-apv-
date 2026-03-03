@@ -3,16 +3,13 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import {
   FileText, DollarSign, AlertTriangle, Users, Truck,
-  RefreshCw, Plus, Clock, CheckCircle, XCircle,
+  RefreshCw, Plus, Clock, CheckCircle, XCircle, ChevronRight,
 } from 'lucide-react'
-import {
-  PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
-} from 'recharts'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { getKPIs, getAlertas, getEstadoContratos } from '@/services/dashboard'
 import { getConfig } from '@/services/config'
 import { KPICard } from '@/components/shared/KPICard'
-import { StatusBadge, PrioridadeBadge } from '@/components/shared/StatusBadge'
+import { StatusBadge } from '@/components/shared/StatusBadge'
 import { formatUSD, formatKZ, formatDate, formatNumber } from '@/utils/formatters'
 
 const STATUS_COLORS: Record<string, string> = {
@@ -69,19 +66,43 @@ export default function Dashboard() {
       }))
   }, [contratos])
 
-  const receitaPorCliente = useMemo(() => {
-    if (!contratos) return []
-    const agrupado: Record<string, number> = {}
-    contratos
-      .filter(c => c.tipo_contrato === 'APV' && c.valor_mensal_usd && c.valor_mensal_usd > 0)
-      .forEach(c => {
-        const nome = c.cliente_nome.split(' - ')[0]
-        agrupado[nome] = (agrupado[nome] || 0) + c.valor_mensal_usd!
+  const calendarData = useMemo(() => {
+    const MESES_PT = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+    ]
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = now.getMonth()
+    const today = now.getDate()
+    const monthLabel = `${MESES_PT[month]} ${year}`
+    const firstDayOfWeek = new Date(year, month, 1).getDay()
+    const startOffset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+
+    const expirationDays = new Set<number>()
+    const expirations: { day: number; clienteNome: string; modelo: string | null; tipo: string; contratoId: string }[] = []
+
+    if (contratos) {
+      contratos.forEach(c => {
+        if (!c.data_validade) return
+        const d = new Date(c.data_validade)
+        if (d.getFullYear() === year && d.getMonth() === month) {
+          const day = d.getDate()
+          expirationDays.add(day)
+          expirations.push({
+            day,
+            clienteNome: c.cliente_nome.split(' - ')[0],
+            modelo: c.modelo,
+            tipo: c.tipo_contrato,
+            contratoId: c.contrato_id,
+          })
+        }
       })
-    return Object.entries(agrupado)
-      .map(([nome, valor]) => ({ nome, valor: Math.round(valor) }))
-      .sort((a, b) => b.valor - a.valor)
-      .slice(0, 8)
+    }
+    expirations.sort((a, b) => a.day - b.day)
+
+    return { monthLabel, startOffset, daysInMonth, today, expirationDays, expirations }
   }, [contratos])
 
   const marcaDistribuicao = useMemo(() => {
@@ -93,6 +114,33 @@ export default function Dashboard() {
     return Object.entries(agrupado)
       .map(([marca, count]) => ({ marca, count }))
       .sort((a, b) => b.count - a.count)
+  }, [contratos])
+
+  const topClientes = useMemo(() => {
+    if (!contratos) return []
+    const agrupado: Record<string, { clienteNome: string; viaturas: Set<string>; apvUsd: number; cmKz: number }> = {}
+    contratos.forEach(c => {
+      const key = c.cliente_id
+      if (!agrupado[key]) {
+        agrupado[key] = { clienteNome: c.cliente_nome.split(' - ')[0], viaturas: new Set(), apvUsd: 0, cmKz: 0 }
+      }
+      if (c.viatura_id) agrupado[key].viaturas.add(c.viatura_id)
+      if (c.tipo_contrato === 'APV' && c.valor_mensal_usd) agrupado[key].apvUsd += c.valor_mensal_usd
+      if (c.tipo_contrato === 'CM' && c.valor_total_kz) agrupado[key].cmKz += c.valor_total_kz
+    })
+    return Object.entries(agrupado)
+      .map(([id, d]) => ({ clienteId: id, clienteNome: d.clienteNome, veiculos: d.viaturas.size, apvUsd: d.apvUsd, cmKz: d.cmKz, sortValue: d.apvUsd + d.cmKz / 12 }))
+      .filter(g => g.sortValue > 0)
+      .sort((a, b) => b.sortValue - a.sortValue)
+      .slice(0, 5)
+  }, [contratos])
+
+  const contratosProximos = useMemo(() => {
+    if (!contratos) return []
+    return contratos
+      .filter(c => c.status_contrato !== 'FECHADO')
+      .sort((a, b) => a.dias_ate_expiracao - b.dias_ate_expiracao)
+      .slice(0, 5)
   }, [contratos])
 
   if (loadingKPIs) {
@@ -195,26 +243,52 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Revenue by Client */}
-        <div className="col-span-5 bg-white rounded-lg border border-nors-light-gray p-4">
-          <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-3">Receita Mensal por Cliente (USD)</h3>
-          {receitaPorCliente.length > 0 ? (
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={receitaPorCliente} layout="vertical" margin={{ left: 0, right: 16, top: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#D6D6D6" horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 10, fill: '#575757' }} tickFormatter={(v: number) => `$${v}`} />
-                  <YAxis type="category" dataKey="nome" tick={{ fontSize: 10, fill: '#575757' }} width={90} />
-                  <Tooltip
-                    formatter={(value: number) => [`$${value.toLocaleString()}`, 'USD/Mês']}
-                    contentStyle={{ fontSize: '11px', borderRadius: '8px', border: '1px solid #D6D6D6' }}
-                  />
-                  <Bar dataKey="valor" fill={CHART_TEAL} radius={[0, 4, 4, 0]} barSize={16} />
-                </BarChart>
-              </ResponsiveContainer>
+        {/* Calendar Widget */}
+        <div className="col-span-5 bg-white rounded-lg border border-nors-light-gray p-5">
+          <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-3">Calendário de Vencimentos</h3>
+          <p className="text-sm font-semibold text-nors-black mb-3">{calendarData.monthLabel}</p>
+          <div className="grid grid-cols-7 gap-1 mb-1">
+            {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map(d => (
+              <div key={d} className="text-center text-[10px] font-semibold text-nors-medium-gray py-1">{d}</div>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-1">
+            {Array.from({ length: calendarData.startOffset }).map((_, i) => (
+              <div key={`empty-${i}`} className="h-8" />
+            ))}
+            {Array.from({ length: calendarData.daysInMonth }).map((_, i) => {
+              const day = i + 1
+              const isToday = day === calendarData.today
+              const hasExpiration = calendarData.expirationDays.has(day)
+              return (
+                <div
+                  key={day}
+                  className={`h-8 flex flex-col items-center justify-center rounded text-xs ${isToday ? 'bg-nors-off-white font-semibold' : ''}`}
+                >
+                  <span className={isToday ? 'text-nors-black' : 'text-nors-dark-gray font-light'}>{day}</span>
+                  {hasExpiration && <span className="w-1.5 h-1.5 rounded-full bg-nors-teal mt-0.5" />}
+                </div>
+              )
+            })}
+          </div>
+          {calendarData.expirations.length > 0 ? (
+            <div className="mt-4 space-y-1.5 max-h-24 overflow-y-auto">
+              {calendarData.expirations.map((ev, i) => (
+                <Link
+                  key={i}
+                  to={`/contratos/${ev.contratoId}`}
+                  className="flex items-center gap-2 text-[11px] text-nors-dark-gray hover:text-nors-teal transition-colors"
+                >
+                  <span className="font-semibold text-nors-black whitespace-nowrap">
+                    {ev.day} {calendarData.monthLabel.split(' ')[0].slice(0, 3)}
+                  </span>
+                  <span className="truncate">{ev.clienteNome} ({ev.modelo || '—'})</span>
+                  <span className="text-nors-light-gray-2 whitespace-nowrap">— {ev.tipo} expira</span>
+                </Link>
+              ))}
             </div>
           ) : (
-            <div className="h-48 flex items-center justify-center text-xs text-gray-400">Sem dados de receita</div>
+            <p className="mt-4 text-xs text-nors-light-gray-2 font-light text-center">Sem vencimentos este mês</p>
           )}
         </div>
 
@@ -251,98 +325,95 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Bottom Row: Alerts + Contracts Table */}
+      {/* Bottom Row: Top Clients + Upcoming Expirations */}
       <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-extrabold uppercase tracking-wide text-nors-dark-gray">Alertas</h2>
-            {allAlertas.length > 0 && (
-              <span className="text-[10px] text-nors-dark-gray font-light">{allAlertas.length} activo(s)</span>
-            )}
-          </div>
-          
-          {allAlertas.length === 0 ? (
-            <div className="bg-white rounded-lg border border-nors-light-gray p-6 text-center">
-              <CheckCircle size={24} className="text-emerald-500 mx-auto mb-2" />
-              <p className="text-sm font-light text-nors-dark-gray">Tudo em ordem</p>
+        {/* Top Clients Ranking */}
+        <div className="col-span-7 bg-white rounded-lg border border-nors-light-gray p-5">
+          <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-4">Top Clientes</h3>
+          {topClientes.length > 0 ? (
+            <div className="space-y-4">
+              {topClientes.map((client, i) => {
+                const maxValue = topClientes[0].sortValue
+                const barPct = maxValue > 0 ? Math.round((client.sortValue / maxValue) * 100) : 0
+                return (
+                  <div key={client.clienteId} className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-lg font-extrabold text-nors-light-gray-2 w-6 text-right">{i + 1}</span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-nors-black truncate">{client.clienteNome}</p>
+                          <p className="text-[10px] font-light text-nors-light-gray-2">
+                            {client.veiculos} viatura{client.veiculos !== 1 ? 's' : ''}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0 ml-3">
+                        {client.apvUsd > 0 && (
+                          <p className="text-xs font-semibold text-nors-black">
+                            {formatUSD(client.apvUsd)}<span className="text-nors-light-gray-2 font-light">/mês</span>
+                          </p>
+                        )}
+                        {client.cmKz > 0 && (
+                          <p className="text-[10px] font-light text-nors-dark-gray">
+                            {formatKZ(client.cmKz)} <span className="text-nors-light-gray-2">(CM)</span>
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="ml-9 h-1.5 bg-nors-off-white rounded-full overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${barPct}%`, backgroundColor: '#415A67' }} />
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           ) : (
-            <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
-              {allAlertas.map((alerta, i) => (
-                <Link
-                  key={i}
-                  to={`/contratos/${alerta.referencia_id}`}
-                  className="block bg-white rounded-lg border border-nors-light-gray p-3 hover:border-nors-teal/40 transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold text-nors-black truncate">{alerta.descricao}</p>
-                      <p className="text-[10px] font-light text-nors-dark-gray mt-0.5 line-clamp-2">{alerta.detalhe}</p>
-                    </div>
-                    <PrioridadeBadge prioridade={alerta.prioridade} />
-                  </div>
-                </Link>
-              ))}
-            </div>
+            <div className="h-40 flex items-center justify-center text-xs text-nors-light-gray-2 font-light">Sem dados de clientes</div>
           )}
         </div>
 
-        <div className="col-span-8 space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-extrabold uppercase tracking-wide text-nors-dark-gray">
-              Contratos ({contratos?.length || 0})
-            </h2>
-            <Link to="/contratos" className="text-xs text-nors-teal hover:underline font-semibold">
-              Ver todos →
-            </Link>
-          </div>
-
-          <div className="bg-white rounded-lg border border-nors-light-gray overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-nors-black text-white text-xs font-extrabold uppercase">
-                  <th className="text-left px-3 py-2.5">Cliente</th>
-                  <th className="text-left px-3 py-2.5">Matrícula</th>
-                  <th className="text-left px-3 py-2.5">Marca</th>
-                  <th className="text-right px-3 py-2.5">USD/Mês</th>
-                  <th className="text-center px-3 py-2.5">Validade</th>
-                  <th className="text-center px-3 py-2.5">Dias</th>
-                  <th className="text-center px-3 py-2.5">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-nors-light-gray">
-                {(contratos || []).slice(0, 12).map((c) => (
-                  <tr key={c.contrato_id} className="hover:bg-nors-off-white even:bg-nors-off-white/50">
-                    <td className="px-3 py-2 text-xs truncate max-w-[140px]">
-                      <Link to={`/contratos/${c.contrato_id}`} className="font-semibold text-nors-teal hover:underline">
-                        {c.cliente_nome.split(' - ')[0]}
-                      </Link>
-                    </td>
-                    <td className="px-3 py-2 text-xs font-mono">
-                      {c.matricula || <span className="text-gray-400">N/A</span>}
-                    </td>
-                    <td className="px-3 py-2 text-xs">{c.marca}</td>
-                    <td className="px-3 py-2 text-xs text-right font-semibold">
-                      {c.valor_mensal_usd ? formatUSD(c.valor_mensal_usd) : '—'}
-                    </td>
-                    <td className="px-3 py-2 text-xs text-center">{formatDate(c.data_validade)}</td>
-                    <td className="px-3 py-2 text-xs text-center">
-                      <span className={`font-semibold ${
-                        c.dias_ate_expiracao < 0 ? 'text-red-600' :
-                        c.dias_ate_expiracao <= 60 ? 'text-amber-600' :
-                        'text-nors-dark-gray'
-                      }`}>
-                        {c.dias_ate_expiracao}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2 text-center">
-                      <StatusBadge status={c.status_contrato} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        {/* Upcoming Contract Expirations */}
+        <div className="col-span-5 bg-white rounded-lg border border-nors-light-gray p-5">
+          <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-4">Contratos Próximos ao Vencimento</h3>
+          {contratosProximos.length > 0 ? (
+            <div className="space-y-2">
+              {contratosProximos.map(c => {
+                const isOverdue = c.dias_ate_expiracao < 0
+                const isUrgent = c.dias_ate_expiracao >= 0 && c.dias_ate_expiracao < 30
+                const borderColor = isOverdue ? '#956C6D' : isUrgent ? '#B2A06E' : '#415A67'
+                const daysColor = isOverdue ? 'text-[#956C6D]' : isUrgent ? 'text-[#B2A06E]' : 'text-nors-dark-gray'
+                return (
+                  <Link
+                    key={c.contrato_id}
+                    to={`/contratos/${c.contrato_id}`}
+                    className="block rounded-lg border border-nors-light-gray p-3 hover:border-nors-teal/40 transition-colors"
+                    style={{ borderLeftWidth: '3px', borderLeftColor: borderColor }}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-semibold text-nors-black truncate">{c.cliente_nome.split(' - ')[0]}</p>
+                          <StatusBadge status={c.status_contrato} />
+                        </div>
+                        <p className="text-[10px] font-light text-nors-dark-gray mt-0.5">
+                          {c.modelo || c.marca} · {c.matricula || c.vin?.slice(-6)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="text-right">
+                          <p className={`text-sm font-extrabold ${daysColor}`}>{c.dias_ate_expiracao}d</p>
+                          <p className="text-[9px] font-light text-nors-light-gray-2">{formatDate(c.data_validade)}</p>
+                        </div>
+                        <ChevronRight size={14} className="text-nors-light-gray-2" />
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="h-40 flex items-center justify-center text-xs text-nors-light-gray-2 font-light">Sem contratos próximos ao vencimento</div>
+          )}
         </div>
       </div>
     </div>
