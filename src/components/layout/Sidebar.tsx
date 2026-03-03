@@ -35,7 +35,7 @@ export function Sidebar({ alertCount = 0, totalAlerts = 0 }: SidebarProps) {
       </div>
 
       {/* Alert Banner */}
-      {alertCount > 0 && (
+      {alertCount > 0 ? (
         <div className="mx-3 mb-3 bg-red-500/15 border border-red-500/30 rounded-lg px-3 py-2">
           <div className="flex items-center gap-2">
             <AlertTriangle size={14} className="text-red-400 flex-shrink-0" />
@@ -51,7 +51,18 @@ export function Sidebar({ alertCount = 0, totalAlerts = 0 }: SidebarProps) {
             </div>
           </div>
         </div>
-      )}
+      ) : totalAlerts > 0 ? (
+        <div className="mx-3 mb-3 rounded-lg px-3 py-2" style={{ backgroundColor: 'rgba(65, 90, 103, 0.15)', borderWidth: 1, borderColor: 'rgba(65, 90, 103, 0.3)' }}>
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={14} className="flex-shrink-0" style={{ color: '#9CC7DE' }} />
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold" style={{ color: '#9CC7DE' }}>
+                {totalAlerts} alerta{totalAlerts > 1 ? 's' : ''} activo{totalAlerts > 1 ? 's' : ''}
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* Navigation */}
       <nav className="flex-1 px-3 space-y-0.5">
@@ -73,6 +84,11 @@ export function Sidebar({ alertCount = 0, totalAlerts = 0 }: SidebarProps) {
             {label === 'Dashboard' && alertCount > 0 && (
               <span className="ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
                 {alertCount > 9 ? '9+' : alertCount}
+              </span>
+            )}
+            {label === 'Dashboard' && alertCount === 0 && totalAlerts > 0 && (
+              <span className="ml-auto text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center" style={{ backgroundColor: '#415A67' }}>
+                {totalAlerts > 9 ? '9+' : totalAlerts}
               </span>
             )}
           </NavLink>
