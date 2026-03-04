@@ -15,6 +15,7 @@ import ClientsList from '@/pages/clients/ClientsList'
 import ClientForm from '@/pages/clients/ClientForm'
 import ClientDetail from '@/pages/clients/ClientDetail'
 import Settings from '@/pages/settings/Settings'
+import ReceptionPortal from '@/pages/ReceptionPortal'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="/clientes/:id" element={<ClientDetail />} />
             <Route path="/configuracoes" element={<Settings />} />
           </Route>
+          <Route path="/recepcao" element={<ReceptionPortal />} />
         </Routes>
       </HashRouter>
     </QueryClientProvider>
