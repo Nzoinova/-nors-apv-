@@ -25,9 +25,9 @@ interface SidebarProps {
 
 export function Sidebar({ alertCount = 0, totalAlerts = 0 }: SidebarProps) {
   return (
-    <aside className="fixed top-0 left-0 h-screen w-56 bg-nors-black flex flex-col z-30">
+    <aside className="fixed top-0 left-0 h-screen w-56 bg-nors-black flex flex-col z-30 shadow-lg">
       {/* Logo */}
-      <div className="p-5 pb-6">
+      <div className="p-5 pb-4 border-b border-white/10 mb-4">
         <h1 className="text-white font-extrabold text-xl tracking-tight">NORS</h1>
         <p className="text-nors-light-gray-2 text-[10px] font-light uppercase tracking-widest mt-0.5">
           GESTÃO APV
@@ -36,7 +36,7 @@ export function Sidebar({ alertCount = 0, totalAlerts = 0 }: SidebarProps) {
 
       {/* Alert Banner */}
       {alertCount > 0 ? (
-        <div className="mx-3 mb-3 bg-red-500/15 border border-red-500/30 rounded-lg px-3 py-2">
+        <div className="mx-3 mb-4 rounded-md px-3 py-2" style={{ borderLeft: '3px solid #ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)' }}>
           <div className="flex items-center gap-2">
             <AlertTriangle size={14} className="text-red-400 flex-shrink-0" />
             <div className="min-w-0">
@@ -52,7 +52,7 @@ export function Sidebar({ alertCount = 0, totalAlerts = 0 }: SidebarProps) {
           </div>
         </div>
       ) : totalAlerts > 0 ? (
-        <div className="mx-3 mb-3 rounded-lg px-3 py-2" style={{ backgroundColor: 'rgba(65, 90, 103, 0.15)', borderWidth: 1, borderColor: 'rgba(65, 90, 103, 0.3)' }}>
+        <div className="mx-3 mb-4 rounded-md px-3 py-2" style={{ borderLeft: '3px solid #415A67', backgroundColor: 'rgba(65, 90, 103, 0.15)' }}>
           <div className="flex items-center gap-2">
             <AlertTriangle size={14} className="flex-shrink-0" style={{ color: '#9CC7DE' }} />
             <div className="min-w-0">
@@ -65,17 +65,17 @@ export function Sidebar({ alertCount = 0, totalAlerts = 0 }: SidebarProps) {
       ) : null}
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 space-y-0.5">
+      <nav className="flex-1 px-3 mt-2 space-y-0.5">
         {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
             end={to === '/'}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors ${
+              `flex items-center gap-3 h-10 px-3 rounded-md text-sm transition-colors ${
                 isActive
-                  ? 'bg-nors-off-black text-white font-semibold'
-                  : 'text-nors-light-gray-2 hover:text-white hover:bg-nors-off-black/50'
+                  ? 'bg-nors-teal text-white font-semibold'
+                  : 'text-[#ABABAB] hover:bg-white/10 hover:text-white'
               }`
             }
           >
@@ -96,7 +96,7 @@ export function Sidebar({ alertCount = 0, totalAlerts = 0 }: SidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-nors-off-black">
+      <div className="p-4 border-t border-white/10">
         <p className="text-nors-medium-gray text-[10px] font-light">
           NORS Trucks & Buses Angola VT
         </p>

@@ -2,8 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Smooth transitions globally */
+* {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 150ms;
+}
+
 @layer base {
   body {
     @apply bg-nors-off-white text-nors-black;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }

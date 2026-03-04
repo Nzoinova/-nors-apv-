@@ -62,17 +62,17 @@ export default function ContractForm() {
         <ArrowLeft size={16} /> Voltar
       </Link>
 
-      <h1 className="text-2xl font-extrabold tracking-tight">Novo Contrato</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Novo Contrato</h1>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray">Cliente</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500">Cliente</label>
             <Link to="/clientes/novo" className="inline-flex items-center gap-1 text-[10px] text-nors-teal hover:underline font-semibold">
               <Plus size={10} /> Novo Cliente
             </Link>
           </div>
-          <select value={clienteId} onChange={(e) => { setClienteId(e.target.value); setViaturaId('') }} required className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30">
+          <select value={clienteId} onChange={(e) => { setClienteId(e.target.value); setViaturaId('') }} required className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20">
             <option value="">Seleccionar cliente...</option>
             {(clientes || []).map(c => (
               <option key={c.id} value={c.id}>{c.nome}</option>
@@ -82,12 +82,12 @@ export default function ContractForm() {
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray">Viatura</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500">Viatura</label>
             <Link to="/viaturas/nova" className="inline-flex items-center gap-1 text-[10px] text-nors-teal hover:underline font-semibold">
               <Plus size={10} /> Nova Viatura
             </Link>
           </div>
-          <select value={viaturaId} onChange={(e) => setViaturaId(e.target.value)} required disabled={!clienteId} className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30 disabled:opacity-50">
+          <select value={viaturaId} onChange={(e) => setViaturaId(e.target.value)} required disabled={!clienteId} className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20 disabled:opacity-50">
             <option value="">{clienteId ? 'Seleccionar viatura...' : 'Seleccione um cliente primeiro'}</option>
             {(viaturas || []).map(v => (
               <option key={v.id} value={v.id}>{v.matricula || 'S/Mat'} — {v.vin} ({v.marca})</option>
@@ -102,47 +102,47 @@ export default function ContractForm() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">Data Início</label>
-            <input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} required className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30" />
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Data Início</label>
+            <input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} required className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20" />
           </div>
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">Duração (meses)</label>
-            <input type="number" value={duracaoMeses} onChange={(e) => setDuracaoMeses(parseInt(e.target.value) || 24)} min={1} className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30" />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">Valor Mensal (USD)</label>
-            <input type="number" step="0.01" value={valorMensal} onChange={(e) => setValorMensal(e.target.value)} placeholder="Ex: 385.00" className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30" />
-          </div>
-          <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">Intervalo KM Revisão</label>
-            <input type="number" value={intervaloKm} onChange={(e) => setIntervaloKm(parseInt(e.target.value) || 15000)} className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30" />
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Duração (meses)</label>
+            <input type="number" value={duracaoMeses} onChange={(e) => setDuracaoMeses(parseInt(e.target.value) || 24)} min={1} className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20" />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">KM Anuais Contratados</label>
-            <input type="number" value={kmAnuais} onChange={(e) => setKmAnuais(parseInt(e.target.value) || 60000)} className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30" />
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Valor Mensal (USD)</label>
+            <input type="number" step="0.01" value={valorMensal} onChange={(e) => setValorMensal(e.target.value)} placeholder="Ex: 385.00" className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20" />
           </div>
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">KM Total Contratados</label>
-            <input type="number" value={kmTotal} onChange={(e) => setKmTotal(parseInt(e.target.value) || 120000)} className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30" />
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Intervalo KM Revisão</label>
+            <input type="number" value={intervaloKm} onChange={(e) => setIntervaloKm(parseInt(e.target.value) || 15000)} className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">KM Anuais Contratados</label>
+            <input type="number" value={kmAnuais} onChange={(e) => setKmAnuais(parseInt(e.target.value) || 60000)} className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">KM Total Contratados</label>
+            <input type="number" value={kmTotal} onChange={(e) => setKmTotal(parseInt(e.target.value) || 120000)} className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20" />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">Observações</label>
-          <textarea value={obs} onChange={(e) => setObs(e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30" />
+          <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Observações</label>
+          <textarea value={obs} onChange={(e) => setObs(e.target.value)} rows={3} className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20" />
         </div>
 
         {mutation.error && (
           <div className="bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm">Erro: {(mutation.error as Error).message}</div>
         )}
 
-        <button type="submit" disabled={mutation.isPending || !clienteId || !viaturaId} className="inline-flex items-center gap-2 bg-nors-teal text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-nors-teal/90 transition-colors disabled:opacity-50">
+        <button type="submit" disabled={mutation.isPending || !clienteId || !viaturaId} className="inline-flex items-center gap-2 bg-nors-teal text-white h-10 px-4 rounded-md text-sm font-medium hover:opacity-90 disabled:opacity-50">
           <Save size={16} />
           {mutation.isPending ? 'A guardar...' : 'Criar Contrato'}
         </button>

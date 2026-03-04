@@ -22,12 +22,12 @@ export const OS_PREFIXES: Record<string, Record<string, string>> = {
 
 export const MARCAS = ['Dongfeng', 'Volvo', 'SDMO', 'Rekohl'] as const
 
-export const STATUS_CONTRATO_COLORS: Record<string, { bg: string; text: string }> = {
-  ATIVO: { bg: 'bg-emerald-50', text: 'text-emerald-700' },
-  'A RENOVAR': { bg: 'bg-amber-50', text: 'text-amber-700' },
-  EXPIRADO: { bg: 'bg-red-50', text: 'text-red-700' },
-  CORTESIA: { bg: 'bg-blue-50', text: 'text-blue-700' },
-  FECHADO: { bg: 'bg-gray-100', text: 'text-gray-600' },
+export const STATUS_CONTRATO_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  ATIVO: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border border-emerald-200' },
+  'A RENOVAR': { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border border-amber-200' },
+  EXPIRADO: { bg: 'bg-red-50', text: 'text-red-700', border: 'border border-red-200' },
+  CORTESIA: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border border-blue-200' },
+  FECHADO: { bg: 'bg-gray-100', text: 'text-gray-600', border: 'border border-gray-200' },
 }
 
 export const PRIORIDADE_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
