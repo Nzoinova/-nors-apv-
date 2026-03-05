@@ -163,27 +163,27 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Dashboard</h1>
-          <p className="text-sm font-light text-nors-dark-gray mt-1">
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-sm text-gray-500 mt-1">
             Visão geral dos contratos de manutenção APV
           </p>
         </div>
         <div className="flex items-center gap-3">
           {config && (
-            <div className="text-right text-xs font-light text-nors-dark-gray">
-              <p>Câmbio: <span className="font-semibold">{formatNumber(config.taxa_cambio_usd_kz)} KZ/USD</span></p>
+            <div className="text-right text-xs text-gray-500">
+              <p>Câmbio: <span className="font-semibold text-gray-900">{formatNumber(config.taxa_cambio_usd_kz)} KZ/USD</span></p>
               <p>{formatDate(config.data_atualizacao_taxa)}</p>
             </div>
           )}
           <div className="flex gap-2">
-            <Link to="/contratos/novo" className="inline-flex items-center gap-1.5 bg-nors-teal text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-nors-teal/90 transition-colors">
-              <Plus size={12} /> Contrato
+            <Link to="/contratos/novo" className="inline-flex items-center gap-1.5 bg-nors-teal text-white h-10 px-4 rounded-md text-sm font-medium hover:opacity-90">
+              <Plus size={14} /> Contrato
             </Link>
-            <Link to="/viaturas/nova" className="inline-flex items-center gap-1.5 bg-nors-off-black text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-nors-dark-gray transition-colors">
-              <Plus size={12} /> Viatura
+            <Link to="/viaturas/nova" className="inline-flex items-center gap-1.5 bg-white text-gray-700 h-10 px-4 rounded-md text-sm font-medium border border-gray-200 hover:bg-gray-50">
+              <Plus size={14} /> Viatura
             </Link>
-            <Link to="/os/nova" className="inline-flex items-center gap-1.5 border border-nors-light-gray px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-nors-off-white transition-colors">
-              <Plus size={12} /> OS
+            <Link to="/os/nova" className="inline-flex items-center gap-1.5 bg-white text-gray-700 h-10 px-4 rounded-md text-sm font-medium border border-gray-200 hover:bg-gray-50">
+              <Plus size={14} /> OS
             </Link>
           </div>
         </div>
@@ -204,123 +204,134 @@ export default function Dashboard() {
       {/* Charts Row */}
       <div className="grid grid-cols-12 gap-4">
         {/* Status Distribution Donut */}
-        <div className="col-span-3 bg-white rounded-lg border border-nors-light-gray p-4">
-          <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-3">Estado dos Contratos</h3>
-          {statusData.length > 0 ? (
-            <>
-              <div className="h-40">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={statusData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={40}
-                      outerRadius={65}
-                      paddingAngle={2}
-                      dataKey="value"
-                    >
-                      {statusData.map((entry, i) => (
-                        <Cell key={i} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value: number) => [`${value} contrato(s)`, '']}
-                      contentStyle={{ fontSize: '11px', borderRadius: '8px', border: '1px solid #D6D6D6' }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="flex justify-center gap-4 mt-2">
-                {statusData.map((d, i) => (
-                  <div key={i} className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color }} />
-                    <span className="text-[10px] text-nors-dark-gray">{d.name} ({d.value})</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <div className="h-40 flex items-center justify-center text-xs text-gray-400">Sem dados</div>
-          )}
+        <div className="col-span-3 bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="px-5 py-4 border-b border-gray-100">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Estado dos Contratos</h3>
+          </div>
+          <div className="p-5">
+            {statusData.length > 0 ? (
+              <>
+                <div className="h-40">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={statusData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={40}
+                        outerRadius={65}
+                        paddingAngle={2}
+                        dataKey="value"
+                      >
+                        {statusData.map((entry, i) => (
+                          <Cell key={i} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value: number) => [`${value} contrato(s)`, '']}
+                        contentStyle={{ fontSize: '11px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex justify-center gap-4 mt-2">
+                  {statusData.map((d, i) => (
+                    <div key={i} className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+                      <span className="text-[10px] text-gray-500">{d.name} ({d.value})</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="h-40 flex items-center justify-center text-xs text-gray-400">Sem dados</div>
+            )}
+          </div>
         </div>
 
         {/* Calendar Widget */}
-        <div className="col-span-5 bg-white rounded-lg border border-nors-light-gray p-5">
-          <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-3">Calendário de Vencimentos</h3>
-          <p className="text-sm font-semibold text-nors-black mb-3">{calendarData.monthLabel}</p>
-          <div className="grid grid-cols-7 gap-1 mb-1">
-            {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map(d => (
-              <div key={d} className="text-center text-[10px] font-semibold text-nors-medium-gray py-1">{d}</div>
-            ))}
+        <div className="col-span-5 bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="px-5 py-4 border-b border-gray-100">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Calendário de Vencimentos</h3>
           </div>
-          <div className="grid grid-cols-7 gap-1">
-            {Array.from({ length: calendarData.startOffset }).map((_, i) => (
-              <div key={`empty-${i}`} className="h-8" />
-            ))}
-            {Array.from({ length: calendarData.daysInMonth }).map((_, i) => {
-              const day = i + 1
-              const isToday = day === calendarData.today
-              const hasExpiration = calendarData.expirationDays.has(day)
-              return (
-                <div
-                  key={day}
-                  className={`h-8 flex flex-col items-center justify-center rounded text-xs ${isToday ? 'bg-nors-off-white font-semibold' : ''}`}
-                >
-                  <span className={isToday ? 'text-nors-black' : 'text-nors-dark-gray font-light'}>{day}</span>
-                  {hasExpiration && <span className="w-1.5 h-1.5 rounded-full bg-nors-teal mt-0.5" />}
-                </div>
-              )
-            })}
-          </div>
-          {calendarData.expirations.length > 0 ? (
-            <div className="mt-4 space-y-1.5 max-h-24 overflow-y-auto">
-              {calendarData.expirations.map((ev, i) => {
-                const isAPV = ev.tipo === 'APV'
+          <div className="p-5">
+            <p className="text-sm font-semibold text-gray-900 mb-3">{calendarData.monthLabel}</p>
+            <div className="grid grid-cols-7 gap-1 mb-1">
+              {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map(d => (
+                <div key={d} className="text-center text-[10px] font-semibold text-gray-400 py-1">{d}</div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-1">
+              {Array.from({ length: calendarData.startOffset }).map((_, i) => (
+                <div key={`empty-${i}`} className="h-8" />
+              ))}
+              {Array.from({ length: calendarData.daysInMonth }).map((_, i) => {
+                const day = i + 1
+                const isToday = day === calendarData.today
+                const hasExpiration = calendarData.expirationDays.has(day)
                 return (
-                  <Link
-                    key={i}
-                    to={`/contratos/${ev.contratoId}`}
-                    className={`flex items-center gap-2 text-[11px] transition-colors ${
-                      isAPV
-                        ? 'text-nors-dark-gray hover:text-nors-teal'
-                        : 'text-nors-light-gray-2 hover:text-nors-medium-gray'
-                    }`}
+                  <div
+                    key={day}
+                    className={`h-8 flex flex-col items-center justify-center rounded text-xs ${isToday ? 'font-semibold' : ''}`}
+                    style={isToday ? { backgroundColor: '#415A67' } : undefined}
                   >
-                    {isAPV && <span className="w-1.5 h-1.5 rounded-full bg-nors-teal flex-shrink-0" />}
-                    <span className={`whitespace-nowrap ${isAPV ? 'font-semibold text-nors-black' : 'font-light text-nors-medium-gray'}`}>
-                      {ev.day} {calendarData.monthLabel.split(' ')[0].slice(0, 3)}
-                    </span>
-                    <span className={`truncate ${isAPV ? '' : 'font-light'}`}>
-                      {ev.clienteNome} ({ev.modelo || '—'})
-                    </span>
-                    <span className={`whitespace-nowrap ${isAPV ? 'text-nors-light-gray-2' : 'text-nors-light-gray'}`}>
-                      — {ev.tipo} expira
-                    </span>
-                  </Link>
+                    <span className={isToday ? 'text-white' : 'text-gray-600 font-light'}>{day}</span>
+                    {hasExpiration && <span className="w-1.5 h-1.5 rounded-full mt-0.5" style={{ backgroundColor: isToday ? '#fff' : '#415A67' }} />}
+                  </div>
                 )
               })}
             </div>
-          ) : (
-            <p className="mt-4 text-xs text-nors-light-gray-2 font-light text-center">Sem vencimentos este mês</p>
-          )}
+            {calendarData.expirations.length > 0 ? (
+              <div className="mt-4 space-y-1.5 max-h-24 overflow-y-auto">
+                {calendarData.expirations.map((ev, i) => {
+                  const isAPV = ev.tipo === 'APV'
+                  return (
+                    <Link
+                      key={i}
+                      to={`/contratos/${ev.contratoId}`}
+                      className={`flex items-center gap-2 text-[11px] transition-colors ${
+                        isAPV
+                          ? 'text-gray-600 hover:text-nors-teal'
+                          : 'text-gray-400 hover:text-gray-600'
+                      }`}
+                    >
+                      {isAPV && <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: '#415A67' }} />}
+                      <span className={`whitespace-nowrap ${isAPV ? 'font-semibold text-gray-900' : 'font-light text-gray-500'}`}>
+                        {ev.day} {calendarData.monthLabel.split(' ')[0].slice(0, 3)}
+                      </span>
+                      <span className={`truncate ${isAPV ? '' : 'font-light'}`}>
+                        {ev.clienteNome} ({ev.modelo || '—'})
+                      </span>
+                      <span className={`whitespace-nowrap ${isAPV ? 'text-gray-400' : 'text-gray-300'}`}>
+                        — {ev.tipo} expira
+                      </span>
+                    </Link>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="mt-4 text-xs text-gray-400 font-light text-center">Sem vencimentos este mês</p>
+            )}
+          </div>
         </div>
 
         {/* Summary Cards */}
         <div className="col-span-4 space-y-3">
-          <div className="bg-white rounded-lg border border-nors-light-gray p-4">
-            <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-3">Contratos por Marca</h3>
-            <div className="space-y-2">
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+            <div className="px-5 py-4 border-b border-gray-100">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Contratos por Marca</h3>
+            </div>
+            <div className="p-5 space-y-2">
               {marcaDistribuicao.map((m) => {
                 const total = contratos?.length || 1
                 const pct = Math.round((m.count / total) * 100)
                 return (
                   <div key={m.marca} className="space-y-1">
                     <div className="flex justify-between text-xs">
-                      <span className="font-semibold">{m.marca}</span>
-                      <span className="text-nors-dark-gray">{m.count} ({pct}%)</span>
+                      <span className="font-semibold text-gray-900">{m.marca}</span>
+                      <span className="text-gray-500">{m.count} ({pct}%)</span>
                     </div>
-                    <div className="h-1.5 bg-nors-off-white rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                       <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: CHART_TEAL }} />
                     </div>
                   </div>
@@ -330,10 +341,10 @@ export default function Dashboard() {
           </div>
 
           {kpis && (
-            <div className="bg-nors-off-black rounded-lg p-4 text-white">
-              <h3 className="text-xs font-light uppercase tracking-wide text-nors-light-gray-2 mb-2">Projecção Anual</h3>
-              <p className="text-xl font-extrabold tracking-tight">{formatUSD(kpis.receita_mensal_usd * 12)}</p>
-              <p className="text-xs font-light text-nors-light-gray-2 mt-1">{formatKZ(kpis.receita_mensal_kz * 12)}</p>
+            <div className="bg-nors-off-black rounded-lg p-4 text-white shadow-sm">
+              <h3 className="text-xs font-light uppercase tracking-wide text-gray-400 mb-2">Projecção Anual</h3>
+              <p className="text-xl font-bold tracking-tight">{formatUSD(kpis.receita_mensal_usd * 12)}</p>
+              <p className="text-xs font-light text-gray-400 mt-1">{formatKZ(kpis.receita_mensal_kz * 12)}</p>
             </div>
           )}
         </div>
@@ -342,92 +353,100 @@ export default function Dashboard() {
       {/* Bottom Row: Top Clients + Upcoming Expirations */}
       <div className="grid grid-cols-12 gap-4">
         {/* Top Clients Ranking */}
-        <div className="col-span-7 bg-white rounded-lg border border-nors-light-gray p-5">
-          <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-4">Top Clientes</h3>
-          {topClientes.length > 0 ? (
-            <div className="space-y-4">
-              {topClientes.map((client, i) => {
-                const maxValue = topClientes[0].sortValue
-                const barPct = maxValue > 0 ? Math.round((client.sortValue / maxValue) * 100) : 0
-                return (
-                  <div key={client.clienteId} className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-lg font-extrabold text-nors-light-gray-2 w-6 text-right">{i + 1}</span>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-nors-black truncate">{client.clienteNome}</p>
-                          <p className="text-[10px] font-light text-nors-light-gray-2">
-                            {client.veiculos} viatura{client.veiculos !== 1 ? 's' : ''}
-                          </p>
+        <div className="col-span-7 bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="px-5 py-4 border-b border-gray-100">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Top Clientes</h3>
+          </div>
+          <div className="p-5">
+            {topClientes.length > 0 ? (
+              <div className="space-y-4">
+                {topClientes.map((client, i) => {
+                  const maxValue = topClientes[0].sortValue
+                  const barPct = maxValue > 0 ? Math.round((client.sortValue / maxValue) * 100) : 0
+                  return (
+                    <div key={client.clienteId} className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="text-lg font-bold text-gray-300 w-6 text-right">{i + 1}</span>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 truncate">{client.clienteNome}</p>
+                            <p className="text-[10px] font-light text-gray-400">
+                              {client.veiculos} viatura{client.veiculos !== 1 ? 's' : ''}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right flex-shrink-0 ml-3">
+                          {client.apvUsd > 0 && (
+                            <p className="text-xs font-semibold text-gray-900">
+                              {formatUSD(client.apvUsd)}<span className="text-gray-400 font-light">/mês</span>
+                            </p>
+                          )}
+                          {client.cmKz > 0 && (
+                            <p className="text-[10px] font-light text-gray-500">
+                              {formatKZ(client.cmKz)} <span className="text-gray-400">(CM)</span>
+                            </p>
+                          )}
                         </div>
                       </div>
-                      <div className="text-right flex-shrink-0 ml-3">
-                        {client.apvUsd > 0 && (
-                          <p className="text-xs font-semibold text-nors-black">
-                            {formatUSD(client.apvUsd)}<span className="text-nors-light-gray-2 font-light">/mês</span>
-                          </p>
-                        )}
-                        {client.cmKz > 0 && (
-                          <p className="text-[10px] font-light text-nors-dark-gray">
-                            {formatKZ(client.cmKz)} <span className="text-nors-light-gray-2">(CM)</span>
-                          </p>
-                        )}
+                      <div className="ml-9 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${barPct}%`, backgroundColor: '#415A67' }} />
                       </div>
                     </div>
-                    <div className="ml-9 h-1.5 bg-nors-off-white rounded-full overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${barPct}%`, backgroundColor: '#415A67' }} />
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          ) : (
-            <div className="h-40 flex items-center justify-center text-xs text-nors-light-gray-2 font-light">Sem dados de clientes</div>
-          )}
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="h-40 flex items-center justify-center text-xs text-gray-400 font-light">Sem dados de clientes</div>
+            )}
+          </div>
         </div>
 
         {/* Upcoming Contract Expirations */}
-        <div className="col-span-5 bg-white rounded-lg border border-nors-light-gray p-5">
-          <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-4">Contratos Próximos ao Vencimento</h3>
-          {contratosProximos.length > 0 ? (
-            <div className="space-y-2">
-              {contratosProximos.map(c => {
-                const isOverdue = c.dias_ate_expiracao < 0
-                const isUrgent = c.dias_ate_expiracao >= 0 && c.dias_ate_expiracao < 30
-                const borderColor = isOverdue ? '#956C6D' : isUrgent ? '#B2A06E' : '#415A67'
-                const daysColor = isOverdue ? 'text-[#956C6D]' : isUrgent ? 'text-[#B2A06E]' : 'text-nors-dark-gray'
-                return (
-                  <Link
-                    key={c.contrato_id}
-                    to={`/contratos/${c.contrato_id}`}
-                    className="block rounded-lg border border-nors-light-gray p-3 hover:border-nors-teal/40 transition-colors"
-                    style={{ borderLeftWidth: '3px', borderLeftColor: borderColor }}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs font-semibold text-nors-black truncate">{c.cliente_nome.split(' - ')[0]}</p>
-                          <StatusBadge status={c.status_contrato} />
+        <div className="col-span-5 bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="px-5 py-4 border-b border-gray-100">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Contratos Próximos ao Vencimento</h3>
+          </div>
+          <div className="p-5">
+            {contratosProximos.length > 0 ? (
+              <div className="space-y-2">
+                {contratosProximos.map(c => {
+                  const isOverdue = c.dias_ate_expiracao < 0
+                  const isUrgent = c.dias_ate_expiracao >= 0 && c.dias_ate_expiracao < 30
+                  const borderColor = isOverdue ? '#ef4444' : isUrgent ? '#f59e0b' : '#415A67'
+                  const daysColor = isOverdue ? 'text-red-600' : isUrgent ? 'text-amber-600' : 'text-gray-600'
+                  return (
+                    <Link
+                      key={c.contrato_id}
+                      to={`/contratos/${c.contrato_id}`}
+                      className="block rounded-lg border border-gray-200 p-3 hover:shadow-md transition-shadow"
+                      style={{ borderLeftWidth: '4px', borderLeftColor: borderColor }}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs font-semibold text-gray-900 truncate">{c.cliente_nome.split(' - ')[0]}</p>
+                            <StatusBadge status={c.status_contrato} />
+                          </div>
+                          <p className="text-[10px] font-light text-gray-500 mt-0.5">
+                            {c.modelo || c.marca} · {c.matricula || c.vin?.slice(-6)}
+                          </p>
                         </div>
-                        <p className="text-[10px] font-light text-nors-dark-gray mt-0.5">
-                          {c.modelo || c.marca} · {c.matricula || c.vin?.slice(-6)}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <div className="text-right">
-                          <p className={`text-sm font-extrabold ${daysColor}`}>{c.dias_ate_expiracao}d</p>
-                          <p className="text-[9px] font-light text-nors-light-gray-2">{formatDate(c.data_validade)}</p>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="text-right">
+                            <p className={`text-sm font-bold ${daysColor}`}>{c.dias_ate_expiracao}d</p>
+                            <p className="text-[9px] font-light text-gray-400">{formatDate(c.data_validade)}</p>
+                          </div>
+                          <ChevronRight size={14} className="text-gray-400" />
                         </div>
-                        <ChevronRight size={14} className="text-nors-light-gray-2" />
                       </div>
-                    </div>
-                  </Link>
-                )
-              })}
-            </div>
-          ) : (
-            <div className="h-40 flex items-center justify-center text-xs text-nors-light-gray-2 font-light">Sem contratos próximos ao vencimento</div>
-          )}
+                    </Link>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="h-40 flex items-center justify-center text-xs text-gray-400 font-light">Sem contratos próximos ao vencimento</div>
+            )}
+          </div>
         </div>
       </div>
     </div>

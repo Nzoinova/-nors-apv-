@@ -43,11 +43,11 @@ export default function ClientForm() {
         <ArrowLeft size={16} /> Voltar
       </Link>
 
-      <h1 className="text-2xl font-extrabold tracking-tight">Novo Cliente</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Novo Cliente</h1>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
             Nome / Razão Social <span className="text-red-500">*</span>
           </label>
           <input
@@ -56,13 +56,13 @@ export default function ClientForm() {
             onChange={(e) => setNome(e.target.value)}
             placeholder="Ex: TRANSMAGO - CARGA GERAL, LDA."
             required
-            className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
+            className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
               NIF
             </label>
             <input
@@ -70,11 +70,11 @@ export default function ClientForm() {
               value={nif}
               onChange={(e) => setNif(e.target.value)}
               placeholder="Nº contribuinte"
-              className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
+              className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
             />
           </div>
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
               Pessoa de Contacto
             </label>
             <input
@@ -82,14 +82,14 @@ export default function ClientForm() {
               value={contacto}
               onChange={(e) => setContacto(e.target.value)}
               placeholder="Nome do contacto"
-              className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
+              className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
               Telefone
             </label>
             <input
@@ -97,11 +97,11 @@ export default function ClientForm() {
               value={telefone}
               onChange={(e) => setTelefone(e.target.value)}
               placeholder="+244 9XX XXX XXX"
-              className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
+              className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
             />
           </div>
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
               Email
             </label>
             <input
@@ -109,13 +109,13 @@ export default function ClientForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="email@empresa.co.ao"
-              className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
+              className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
             Endereço
           </label>
           <input
@@ -123,7 +123,7 @@ export default function ClientForm() {
             value={endereco}
             onChange={(e) => setEndereco(e.target.value)}
             placeholder="Morada completa"
-            className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
+            className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
           />
         </div>
 
@@ -136,7 +136,7 @@ export default function ClientForm() {
         <button
           type="submit"
           disabled={mutation.isPending || !nome}
-          className="inline-flex items-center gap-2 bg-nors-teal text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-nors-teal/90 transition-colors disabled:opacity-50"
+          className="inline-flex items-center gap-2 bg-nors-teal text-white h-10 px-4 rounded-md text-sm font-medium hover:opacity-90 disabled:opacity-50"
         >
           <Save size={16} />
           {mutation.isPending ? 'A guardar...' : 'Adicionar Cliente'}

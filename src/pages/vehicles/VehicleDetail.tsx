@@ -98,24 +98,24 @@ export default function VehicleDetail() {
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">
+          <h1 className="text-2xl font-bold tracking-tight">
             {viatura.matricula || 'Sem matrícula'}
           </h1>
-          <p className="text-sm font-light text-nors-dark-gray mt-1">
+          <p className="text-sm text-gray-500 mt-1">
             {viatura.marca} {viatura.modelo || ''} — {(viatura.cliente as any)?.nome?.split(' - ')[0] || ''}
           </p>
         </div>
         <div className="flex items-center gap-3">
           {!editing ? (
-            <button onClick={startEdit} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-nors-light-gray hover:bg-nors-off-white transition-colors">
+            <button onClick={startEdit} className="inline-flex items-center gap-1.5 bg-white text-gray-700 h-10 px-4 rounded-md text-sm font-medium border border-gray-200 hover:bg-gray-50 transition-colors">
               <Pencil size={14} /> Editar
             </button>
           ) : (
             <div className="flex gap-2">
-              <button onClick={() => setEditing(false)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-nors-light-gray hover:bg-nors-off-white transition-colors">
+              <button onClick={() => setEditing(false)} className="inline-flex items-center gap-1.5 bg-white text-gray-700 h-10 px-4 rounded-md text-sm font-medium border border-gray-200 hover:bg-gray-50 transition-colors">
                 <X size={14} /> Cancelar
               </button>
-              <button onClick={() => setShowConfirm(true)} disabled={mutation.isPending} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-nors-teal text-white hover:bg-nors-teal/90 transition-colors disabled:opacity-50">
+              <button onClick={() => setShowConfirm(true)} disabled={mutation.isPending} className="inline-flex items-center gap-1.5 bg-nors-teal text-white h-10 px-4 rounded-md text-sm font-medium hover:opacity-90 transition-colors disabled:opacity-50">
                 <Save size={14} /> {mutation.isPending ? 'A guardar...' : 'Guardar'}
               </button>
             </div>
@@ -128,16 +128,16 @@ export default function VehicleDetail() {
       )}
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white rounded-lg border border-nors-light-gray p-4 space-y-3">
-          <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray">Identificação</h3>
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 space-y-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Identificação</h3>
           <div className="space-y-2 text-sm">
             {editing ? (
               <>
                 <EditRow label="Matrícula" value={editMatricula} onChange={(v) => setEditMatricula(v.toUpperCase())} />
                 <Row label="VIN" value={viatura.vin} />
                 <div className="flex justify-between items-center gap-3">
-                  <span className="text-nors-dark-gray font-light text-xs">Marca</span>
-                  <select value={editMarca} onChange={(e) => setEditMarca(e.target.value)} className="w-36 px-2 py-1 rounded border border-nors-teal/30 text-xs focus:outline-none">
+                  <span className="text-gray-500 text-xs">Marca</span>
+                  <select value={editMarca} onChange={(e) => setEditMarca(e.target.value)} className="w-36 px-2 py-1 rounded border border-gray-200 focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20 text-xs focus:outline-none">
                     {MARCAS.map(m => <option key={m} value={m}>{m}</option>)}
                   </select>
                 </div>
@@ -157,8 +157,8 @@ export default function VehicleDetail() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-nors-light-gray p-4 space-y-3">
-          <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray">Motor & Quilometragem</h3>
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 space-y-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Motor & Quilometragem</h3>
           <div className="space-y-2 text-sm">
             {editing ? (
               <>
@@ -180,16 +180,16 @@ export default function VehicleDetail() {
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-extrabold uppercase tracking-wide text-nors-dark-gray">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500">
             Ordens de Serviço ({ordensServico?.length || 0})
           </h2>
           <Link to="/os/nova" className="text-xs text-nors-teal hover:underline font-semibold">+ Nova OS</Link>
         </div>
 
-        <div className="bg-white rounded-lg border border-nors-light-gray overflow-hidden">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-nors-black text-white text-xs font-extrabold uppercase">
+              <tr className="bg-gray-50/50 text-xs font-medium uppercase tracking-wider text-gray-500">
                 <th className="text-left px-4 py-3">Nº OS</th>
                 <th className="text-center px-4 py-3">Data</th>
                 <th className="text-center px-4 py-3">Tipo</th>
@@ -200,9 +200,9 @@ export default function VehicleDetail() {
                 <th className="text-center px-4 py-3">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-nors-light-gray">
+            <tbody className="divide-y divide-gray-100">
               {(ordensServico || []).map((os) => (
-                <tr key={os.id} className="hover:bg-nors-off-white even:bg-nors-off-white/50">
+                <tr key={os.id} className="border-b border-gray-100 hover:bg-gray-50/50">
                   <td className="px-4 py-2.5 text-xs font-mono">{os.numero_os}</td>
                   <td className="px-4 py-2.5 text-xs text-center">{formatDate(os.data_os)}</td>
                   <td className="px-4 py-2.5 text-xs text-center font-semibold">{os.tipo_revisao}</td>
@@ -236,7 +236,7 @@ export default function VehicleDetail() {
 function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
     <div className="flex justify-between items-center">
-      <span className="text-nors-dark-gray font-light">{label}</span>
+      <span className="text-gray-500">{label}</span>
       <span className={bold ? 'font-semibold' : ''}>{value}</span>
     </div>
   )
@@ -245,8 +245,8 @@ function Row({ label, value, bold }: { label: string; value: string; bold?: bool
 function EditRow({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
   return (
     <div className="flex justify-between items-center gap-3">
-      <span className="text-nors-dark-gray font-light text-xs whitespace-nowrap">{label}</span>
-      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="w-36 px-2 py-1 rounded border border-nors-teal/30 text-xs text-right focus:outline-none focus:ring-2 focus:ring-nors-teal/30" />
+      <span className="text-gray-500 text-xs whitespace-nowrap">{label}</span>
+      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="w-36 px-2 py-1 rounded border border-gray-200 focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20 text-xs text-right focus:outline-none focus:ring-2 focus:ring-nors-teal/30" />
     </div>
   )
 }

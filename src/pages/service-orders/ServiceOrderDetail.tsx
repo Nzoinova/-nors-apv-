@@ -119,23 +119,23 @@ export default function ServiceOrderDetail() {
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">OS {os.numero_os}</h1>
-          <p className="text-sm font-light text-nors-dark-gray mt-1">
+          <h1 className="text-2xl font-bold tracking-tight">OS {os.numero_os}</h1>
+          <p className="text-sm text-gray-500 mt-1">
             {viatura?.matricula || viatura?.vin} — {viatura?.marca} — {viatura?.cliente?.nome?.split(' - ')[0] || ''}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColor}`}>{os.status}</span>
           {!editing ? (
-            <button onClick={startEdit} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-nors-light-gray hover:bg-nors-off-white transition-colors">
+            <button onClick={startEdit} className="inline-flex items-center gap-1.5 bg-white text-gray-700 h-10 px-4 rounded-md text-sm font-medium border border-gray-200 hover:bg-gray-50 transition-colors">
               <Pencil size={14} /> Editar
             </button>
           ) : (
             <div className="flex gap-2">
-              <button onClick={() => setEditing(false)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-nors-light-gray hover:bg-nors-off-white transition-colors">
+              <button onClick={() => setEditing(false)} className="inline-flex items-center gap-1.5 bg-white text-gray-700 h-10 px-4 rounded-md text-sm font-medium border border-gray-200 hover:bg-gray-50 transition-colors">
                 <X size={14} /> Cancelar
               </button>
-              <button onClick={() => setShowConfirm(true)} disabled={mutation.isPending} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-nors-teal text-white hover:bg-nors-teal/90 transition-colors disabled:opacity-50">
+              <button onClick={() => setShowConfirm(true)} disabled={mutation.isPending} className="inline-flex items-center gap-1.5 bg-nors-teal text-white h-10 px-4 rounded-md text-sm font-medium hover:opacity-90 transition-colors disabled:opacity-50">
                 <Save size={14} /> {mutation.isPending ? 'A guardar...' : 'Guardar'}
               </button>
             </div>
@@ -148,37 +148,37 @@ export default function ServiceOrderDetail() {
       )}
 
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg border border-nors-light-gray p-4 space-y-3">
-          <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray">Identificação</h3>
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 space-y-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Identificação</h3>
           <div className="space-y-2 text-sm">
             {editing ? (
               <>
                 <div className="flex justify-between items-center gap-3">
-                  <span className="text-nors-dark-gray font-light text-xs">Localização</span>
-                  <select value={editLocalizacao} onChange={(e) => setEditLocalizacao(e.target.value)} className="w-28 px-2 py-1 rounded border border-nors-teal/30 text-xs focus:outline-none">
+                  <span className="text-gray-500 text-xs">Localização</span>
+                  <select value={editLocalizacao} onChange={(e) => setEditLocalizacao(e.target.value)} className="w-28 px-2 py-1 rounded border border-gray-200 focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20 text-xs focus:outline-none">
                     {LOCALIZACOES.map(l => <option key={l} value={l}>{l}</option>)}
                   </select>
                 </div>
                 <div className="flex justify-between items-center gap-3">
-                  <span className="text-nors-dark-gray font-light text-xs">Tipo OS</span>
-                  <select value={editTipoOS} onChange={(e) => setEditTipoOS(e.target.value)} className="w-28 px-2 py-1 rounded border border-nors-teal/30 text-xs focus:outline-none">
+                  <span className="text-gray-500 text-xs">Tipo OS</span>
+                  <select value={editTipoOS} onChange={(e) => setEditTipoOS(e.target.value)} className="w-28 px-2 py-1 rounded border border-gray-200 focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20 text-xs focus:outline-none">
                     {TIPOS_OS.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
                 <div className="flex justify-between items-center gap-3">
-                  <span className="text-nors-dark-gray font-light text-xs">Nº OS</span>
+                  <span className="text-gray-500 text-xs">Nº OS</span>
                   <div className="flex items-center gap-1">
                     <span className="text-[10px] font-bold text-nors-teal">{editPrefix}</span>
-                    <input type="text" value={editNumeroOS} onChange={(e) => setEditNumeroOS(e.target.value)} className="w-24 px-2 py-1 rounded border border-nors-teal/30 text-xs text-right focus:outline-none" />
+                    <input type="text" value={editNumeroOS} onChange={(e) => setEditNumeroOS(e.target.value)} className="w-24 px-2 py-1 rounded border border-gray-200 focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20 text-xs text-right focus:outline-none" />
                   </div>
                 </div>
                 <div className="flex justify-between items-center gap-3">
-                  <span className="text-nors-dark-gray font-light text-xs">Data</span>
-                  <input type="date" value={editDataOS} onChange={(e) => setEditDataOS(e.target.value)} className="w-32 px-2 py-1 rounded border border-nors-teal/30 text-xs focus:outline-none" />
+                  <span className="text-gray-500 text-xs">Data</span>
+                  <input type="date" value={editDataOS} onChange={(e) => setEditDataOS(e.target.value)} className="w-32 px-2 py-1 rounded border border-gray-200 focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20 text-xs focus:outline-none" />
                 </div>
                 <div className="flex justify-between items-center gap-3">
-                  <span className="text-nors-dark-gray font-light text-xs">Status</span>
-                  <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className="w-28 px-2 py-1 rounded border border-nors-teal/30 text-xs focus:outline-none">
+                  <span className="text-gray-500 text-xs">Status</span>
+                  <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className="w-28 px-2 py-1 rounded border border-gray-200 focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20 text-xs focus:outline-none">
                     {STATUS_OS.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
@@ -196,14 +196,14 @@ export default function ServiceOrderDetail() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-nors-light-gray p-4 space-y-3">
-          <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray">Serviço</h3>
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 space-y-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Serviço</h3>
           <div className="space-y-2 text-sm">
             {editing ? (
               <>
                 <div className="flex justify-between items-center gap-3">
-                  <span className="text-nors-dark-gray font-light text-xs">Tipo Revisão</span>
-                  <select value={editTipoRevisao} onChange={(e) => { setEditTipoRevisao(e.target.value); setEditDescricao(TIPOS_REVISAO[e.target.value] || editDescricao) }} className="w-28 px-2 py-1 rounded border border-nors-teal/30 text-xs focus:outline-none">
+                  <span className="text-gray-500 text-xs">Tipo Revisão</span>
+                  <select value={editTipoRevisao} onChange={(e) => { setEditTipoRevisao(e.target.value); setEditDescricao(TIPOS_REVISAO[e.target.value] || editDescricao) }} className="w-28 px-2 py-1 rounded border border-gray-200 focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20 text-xs focus:outline-none">
                     {CICLO_DONGFENG.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
@@ -220,8 +220,8 @@ export default function ServiceOrderDetail() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-nors-light-gray p-4 space-y-3">
-          <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray">Medições & Custo</h3>
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 space-y-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Medições & Custo</h3>
           <div className="space-y-2 text-sm">
             {editing ? (
               <>
@@ -244,39 +244,39 @@ export default function ServiceOrderDetail() {
       </div>
 
       {editing ? (
-        <div className="bg-white rounded-lg border border-nors-light-gray p-4 space-y-2">
-          <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray">Observações</h3>
-          <textarea value={editObs} onChange={(e) => setEditObs(e.target.value)} rows={2} className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30" />
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 space-y-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Observações</h3>
+          <textarea value={editObs} onChange={(e) => setEditObs(e.target.value)} rows={2} className="w-full px-3 py-2 rounded-lg border border-gray-200 shadow-sm text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20" />
         </div>
       ) : os.observacoes ? (
-        <div className="bg-white rounded-lg border border-nors-light-gray p-4 space-y-2">
-          <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray">Observações</h3>
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 space-y-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Observações</h3>
           <p className="text-sm font-light">{os.observacoes}</p>
         </div>
       ) : null}
 
-      <div className="bg-white rounded-lg border border-nors-light-gray p-4 space-y-3">
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray">Viatura</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Viatura</h3>
           {viatura && (
             <Link to={`/viaturas/${viatura.id}`} className="text-xs text-nors-teal hover:underline font-semibold">Ver detalhe →</Link>
           )}
         </div>
         <div className="grid grid-cols-4 gap-6 text-sm">
           <div>
-            <p className="text-[10px] font-light uppercase tracking-wide text-gray-400">Matrícula</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Matrícula</p>
             <p className="font-semibold text-xs">{viatura?.matricula || '—'}</p>
           </div>
           <div>
-            <p className="text-[10px] font-light uppercase tracking-wide text-gray-400">VIN</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-gray-400">VIN</p>
             <p className="font-mono text-xs">{viatura?.vin || '—'}</p>
           </div>
           <div>
-            <p className="text-[10px] font-light uppercase tracking-wide text-gray-400">Marca</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Marca</p>
             <p className="text-xs">{viatura?.marca || '—'}</p>
           </div>
           <div>
-            <p className="text-[10px] font-light uppercase tracking-wide text-gray-400">Cliente</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Cliente</p>
             <p className="text-xs">{viatura?.cliente?.nome?.split(' - ')[0] || '—'}</p>
           </div>
         </div>
@@ -288,7 +288,7 @@ export default function ServiceOrderDetail() {
 function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
     <div className="flex justify-between items-center">
-      <span className="text-nors-dark-gray font-light">{label}</span>
+      <span className="text-gray-500">{label}</span>
       <span className={bold ? 'font-semibold' : ''}>{value}</span>
     </div>
   )
@@ -297,8 +297,8 @@ function Row({ label, value, bold }: { label: string; value: string; bold?: bool
 function EditRow({ label, value, onChange, type = 'text', wide }: { label: string; value: string; onChange: (v: string) => void; type?: string; wide?: boolean }) {
   return (
     <div className="flex justify-between items-center gap-3">
-      <span className="text-nors-dark-gray font-light text-xs whitespace-nowrap">{label}</span>
-      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} className={`${wide ? 'w-40' : 'w-28'} px-2 py-1 rounded border border-nors-teal/30 text-xs text-right focus:outline-none focus:ring-2 focus:ring-nors-teal/30`} />
+      <span className="text-gray-500 text-xs whitespace-nowrap">{label}</span>
+      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} className={`${wide ? 'w-40' : 'w-28'} px-2 py-1 rounded border border-gray-200 focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20 text-xs text-right focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20`} />
     </div>
   )
 }

@@ -139,7 +139,7 @@ export default function ContractsList() {
   }
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-64"><RefreshCw className="animate-spin" style={{ color: '#415A67' }} size={24} /></div>
+    return <div className="flex items-center justify-center h-64"><RefreshCw className="animate-spin text-nors-teal" size={24} /></div>
   }
 
   const showAPV = tipoFilter === 'ALL' || tipoFilter === 'APV'
@@ -150,47 +150,45 @@ export default function ContractsList() {
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Contratos</h1>
-          <p className="text-sm font-light text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold tracking-tight">Contratos</h1>
+          <p className="text-sm text-gray-500 mt-1">
             {filtered.length} de {contratos?.length || 0} contratos
             {tipoFilter !== 'ALL' && <> — <span className="font-semibold">{tipoFilter}</span></>}
             {statusFilter !== 'ALL' && <> — <span className="font-semibold">{statusFilter}</span></>}
             {search && <> — "{search}"</>}
           </p>
         </div>
-        <Link to="/contratos/novo" className="inline-flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity" style={{ backgroundColor: '#415A67' }}>
+        <Link to="/contratos/novo" className="inline-flex items-center gap-2 bg-nors-teal text-white h-10 px-4 rounded-md text-sm font-medium hover:opacity-90">
           <Plus size={16} /> Novo Contrato
         </Link>
       </div>
 
       {/* Unified filter bar */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex items-center rounded-lg overflow-hidden border" style={{ borderColor: '#D6D6D6' }}>
-          {/* Tipo tabs (primary, bolder) */}
+        <div className="flex items-center gap-1">
+          {/* Tipo tabs */}
           {(['ALL', 'APV', 'CM'] as const).map(t => (
             <button key={t} onClick={() => { setTipoFilter(t); setStatusFilter('ALL') }}
-              className={`px-4 py-2 text-xs font-extrabold transition-colors flex items-center gap-1.5 ${tipoFilter === t ? 'text-white' : 'bg-white hover:bg-gray-50'}`}
-              style={tipoFilter === t ? { backgroundColor: '#000000' } : { color: '#575757' }}>
+              className={`px-3 py-1.5 text-sm font-medium rounded-md flex items-center gap-1.5 ${tipoFilter === t ? 'bg-nors-off-black text-white' : 'text-gray-500 hover:text-gray-900'}`}>
               {t === 'ALL' ? 'Todos' : t}
-              <span className={`text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center ${tipoFilter === t ? 'bg-white/20' : ''}`}
-                style={tipoFilter !== t ? { backgroundColor: '#F2F2F2', color: '#575757' } : {}}>
+              <span className={`text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center ${tipoFilter === t ? 'bg-white/20' : 'bg-gray-100 text-gray-500'}`}>
                 {tipoCounts[t]}
               </span>
             </button>
           ))}
+        </div>
 
-          {/* Vertical divider */}
-          <div className="w-px self-stretch" style={{ backgroundColor: '#D6D6D6' }} />
+        {/* Vertical divider */}
+        <div className="w-px h-6 bg-gray-200" />
 
-          {/* Status pills (secondary, lighter/smaller) */}
+        {/* Status pills */}
+        <div className="flex items-center gap-1">
           {statusOptions.map(s => (
             <button key={s} onClick={() => setStatusFilter(s)}
-              className={`px-2.5 py-1.5 text-[11px] font-medium transition-colors flex items-center gap-1 ${statusFilter === s ? 'text-white' : 'bg-white hover:bg-gray-50'}`}
-              style={statusFilter === s ? { backgroundColor: '#808080' } : { color: '#808080' }}>
+              className={`px-3 py-1.5 text-sm font-medium rounded-md flex items-center gap-1 ${statusFilter === s ? 'bg-nors-off-black text-white' : 'text-gray-500 hover:text-gray-900'}`}>
               {s === 'ALL' ? 'Todos' : s}
               {(statusCounts[s] ?? 0) > 0 && (
-                <span className="text-[9px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center"
-                  style={statusFilter === s ? { backgroundColor: 'rgba(255,255,255,0.2)' } : { backgroundColor: '#F2F2F2', color: '#808080' }}>
+                <span className={`text-[9px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center ${statusFilter === s ? 'bg-white/20' : 'bg-gray-100 text-gray-500'}`}>
                   {statusCounts[s]}
                 </span>
               )}
@@ -202,10 +200,9 @@ export default function ContractsList() {
         <div className="relative flex-1 max-w-xs">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input type="text" placeholder="Pesquisar..." value={search} onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
-            style={{ borderColor: '#D6D6D6', '--tw-ring-color': 'rgba(65,90,103,0.3)' } as any} />
+            className="w-full h-11 pl-10 pr-4 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20" />
         </div>
-        <button onClick={toggleCollapseAll} className="px-3 py-2 text-xs font-semibold border rounded-lg hover:bg-gray-50 transition-colors" style={{ borderColor: '#D6D6D6' }}>
+        <button onClick={toggleCollapseAll} className="bg-white text-gray-700 h-10 px-4 rounded-md text-sm font-medium border border-gray-200 hover:bg-gray-50">
           {collapsed.size === groups.length ? 'Expandir' : 'Colapsar'}
         </button>
       </div>
@@ -217,84 +214,86 @@ export default function ContractsList() {
           const hasCM = group.contratos.some(c => c.tipo_contrato === 'CM')
           const hasAPV = group.contratos.some(c => c.tipo_contrato === 'APV')
           return (
-            <div key={group.clienteId} className="bg-white rounded-lg border overflow-hidden" style={{ borderColor: '#D6D6D6' }}>
+            <div key={group.clienteId} className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
               {/* Group Header */}
-              <button onClick={() => toggleCollapse(group.clienteId)} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50/50 transition-colors text-left">
-                {isCollapsed ? <ChevronRight size={16} className="text-gray-400 flex-shrink-0" /> : <ChevronDown size={16} className="text-gray-400 flex-shrink-0" />}
+              <button onClick={() => toggleCollapse(group.clienteId)} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50/30 border-b border-gray-100 cursor-pointer text-left">
+                {isCollapsed
+                  ? <ChevronRight size={16} className="text-gray-400 flex-shrink-0 transition-transform" />
+                  : <ChevronDown size={16} className="text-gray-400 flex-shrink-0 transition-transform" />}
                 <div className="flex-1 min-w-0">
-                  <span className="font-extrabold text-sm tracking-tight">{group.shortName}</span>
+                  <span className="text-base font-semibold text-gray-900">{group.shortName}</span>
                   <div className="flex gap-1 mt-0.5">
                     {hasAPV && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#415A67', color: 'white' }}>APV</span>}
-                    {hasCM && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#F2F2F2', color: '#575757' }}>CM</span>}
+                    {hasCM && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">CM</span>}
                   </div>
                 </div>
                 <div className="flex items-center gap-4 flex-shrink-0">
                   <div className="text-right">
-                    <p className="text-[10px] font-light uppercase text-gray-400">Viaturas</p>
-                    <p className="text-sm font-extrabold">{group.totalViaturas}</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Viaturas</p>
+                    <p className="text-sm font-semibold text-gray-900">{group.totalViaturas}</p>
                   </div>
                   {group.totalReceitaUSD > 0 && (
                     <div className="text-right">
-                      <p className="text-[10px] font-light uppercase text-gray-400">APV/Mês</p>
-                      <p className="text-sm font-extrabold" style={{ color: '#415A67' }}>{formatUSD(group.totalReceitaUSD)}</p>
+                      <p className="text-xs font-medium uppercase tracking-wider text-gray-400">APV/Mês</p>
+                      <p className="text-sm font-semibold" style={{ color: '#415A67' }}>{formatUSD(group.totalReceitaUSD)}</p>
                     </div>
                   )}
                   {group.totalValorKZ > 0 && (
                     <div className="text-right">
-                      <p className="text-[10px] font-light uppercase text-gray-400">CM Total</p>
-                      <p className="text-sm font-extrabold" style={{ color: '#575757' }}>{formatKZ(group.totalValorKZ)}</p>
+                      <p className="text-xs font-medium uppercase tracking-wider text-gray-400">CM Total</p>
+                      <p className="text-sm font-semibold text-gray-600">{formatKZ(group.totalValorKZ)}</p>
                     </div>
                   )}
                   <div className="flex gap-1.5 flex-wrap justify-end">
-                    {(group.statusCounts['ATIVO'] || 0) > 0 && <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{group.statusCounts['ATIVO']}</span>}
-                    {(group.statusCounts['A RENOVAR'] || 0) > 0 && <span className="bg-amber-50 text-amber-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{group.statusCounts['A RENOVAR']}</span>}
-                    {(group.statusCounts['CORTESIA'] || 0) > 0 && <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{group.statusCounts['CORTESIA']}</span>}
-                    {(group.statusCounts['FECHADO'] || 0) > 0 && <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{group.statusCounts['FECHADO']}</span>}
-                    {(group.statusCounts['EXPIRADO'] || 0) > 0 && <span className="bg-red-50 text-red-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{group.statusCounts['EXPIRADO']}</span>}
+                    {(group.statusCounts['ATIVO'] || 0) > 0 && <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{group.statusCounts['ATIVO']}</span>}
+                    {(group.statusCounts['A RENOVAR'] || 0) > 0 && <span className="bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{group.statusCounts['A RENOVAR']}</span>}
+                    {(group.statusCounts['CORTESIA'] || 0) > 0 && <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{group.statusCounts['CORTESIA']}</span>}
+                    {(group.statusCounts['FECHADO'] || 0) > 0 && <span className="bg-gray-100 text-gray-600 border border-gray-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{group.statusCounts['FECHADO']}</span>}
+                    {(group.statusCounts['EXPIRADO'] || 0) > 0 && <span className="bg-red-50 text-red-700 border border-red-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{group.statusCounts['EXPIRADO']}</span>}
                   </div>
                 </div>
               </button>
 
               {/* Table */}
               {!isCollapsed && (
-                <table className="w-full text-sm border-t" style={{ borderColor: '#D6D6D6' }}>
+                <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-xs font-semibold uppercase" style={{ backgroundColor: '#F2F2F2', color: '#575757' }}>
-                      <th className="text-left px-3 py-2 w-8">Tipo</th>
+                    <tr className="bg-gray-50/50">
+                      <th className="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 w-8">Tipo</th>
                       <ThSort label="Matrícula" column="matricula" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="left" />
                       <ThSort label="Modelo" column="marca" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="left" />
                       <ThSort label="Validade" column="data_validade" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="center" />
-                      <th className="text-right px-3 py-2">Valor</th>
-                      <th className="text-center px-3 py-2">Status</th>
+                      <th className="text-right px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Valor</th>
+                      <th className="text-center px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
                       <ThSort label="Dias" column="dias_ate_expiracao" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="center" />
                     </tr>
                   </thead>
-                  <tbody className="divide-y" style={{ '--tw-divide-opacity': '0.4' } as any}>
+                  <tbody>
                     {group.contratos.map(c => (
-                      <tr key={c.contrato_id} className="hover:bg-gray-50/50">
-                        <td className="px-3 py-2">
+                      <tr key={c.contrato_id} className="border-b border-gray-100 hover:bg-gray-50/50">
+                        <td className="px-4 py-3">
                           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
                             style={c.tipo_contrato === 'APV' ? { backgroundColor: '#415A67', color: 'white' } : { backgroundColor: '#F2F2F2', color: '#575757' }}>
                             {c.tipo_contrato}
                           </span>
                         </td>
-                        <td className="px-3 py-2 text-xs font-mono font-semibold">
-                          <Link to={`/contratos/${c.contrato_id}`} className="hover:underline" style={{ color: '#415A67' }}>
+                        <td className="px-4 py-3 text-sm font-mono font-medium">
+                          <Link to={`/contratos/${c.contrato_id}`} className="text-nors-teal hover:underline">
                             {c.matricula || <span className="text-gray-400">—</span>}
                           </Link>
                         </td>
-                        <td className="px-3 py-2 text-xs">{c.modelo || c.marca}</td>
-                        <td className="px-3 py-2 text-xs text-center">{formatDate(c.data_validade)}</td>
-                        <td className="px-3 py-2 text-xs text-right font-semibold">
+                        <td className="px-4 py-3 text-sm text-gray-600">{c.modelo || c.marca}</td>
+                        <td className="px-4 py-3 text-sm text-center text-gray-600">{formatDate(c.data_validade)}</td>
+                        <td className="px-4 py-3 text-sm text-right font-medium text-gray-900">
                           {c.tipo_contrato === 'APV'
                             ? (c.valor_mensal_usd ? formatUSD(c.valor_mensal_usd) + '/mês' : '—')
                             : (c.valor_total_kz ? formatKZ(c.valor_total_kz) : '—')
                           }
                         </td>
-                        <td className="px-3 py-2 text-center">
+                        <td className="px-4 py-3 text-center">
                           <StatusBadge status={c.status_contrato} />
                         </td>
-                        <td className="px-3 py-2 text-xs text-center">
+                        <td className="px-4 py-3 text-sm text-center">
                           <span className={`font-semibold ${c.dias_ate_expiracao < 0 ? 'text-red-600' : c.dias_ate_expiracao <= 60 ? 'text-amber-600' : 'text-gray-500'}`}>
                             {c.dias_ate_expiracao}
                           </span>
@@ -309,7 +308,7 @@ export default function ContractsList() {
         })}
 
         {groups.length === 0 && (
-          <div className="bg-white rounded-lg border p-8 text-center" style={{ borderColor: '#D6D6D6' }}>
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-8 text-center">
             <p className="text-sm text-gray-500">Nenhum contrato encontrado</p>
           </div>
         )}
@@ -323,7 +322,7 @@ function ThSort({ label, column, sortKey, sortDir, onSort, align }: {
 }) {
   const isActive = sortKey === column
   return (
-    <th className={`px-3 py-2 cursor-pointer select-none hover:opacity-70 transition-opacity ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'}`}
+    <th className={`px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 cursor-pointer select-none hover:text-gray-700 ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'}`}
       onClick={() => onSort(column)}>
       <span className="inline-flex items-center gap-1">
         {label}

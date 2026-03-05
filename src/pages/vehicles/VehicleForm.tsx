@@ -55,18 +55,18 @@ export default function VehicleForm() {
         <ArrowLeft size={16} /> Voltar
       </Link>
 
-      <h1 className="text-2xl font-extrabold tracking-tight">Nova Viatura</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Nova Viatura</h1>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
             Cliente
           </label>
           <select
             value={clienteId}
             onChange={(e) => setClienteId(e.target.value)}
             required
-            className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
+            className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
           >
             <option value="">Seleccionar cliente...</option>
             {(clientes || []).map(c => (
@@ -77,7 +77,7 @@ export default function VehicleForm() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
               Matrícula
             </label>
             <input
@@ -85,11 +85,11 @@ export default function VehicleForm() {
               value={matricula}
               onChange={(e) => setMatricula(e.target.value.toUpperCase())}
               placeholder="Ex: LDA3645AC"
-              className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
+              className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
             />
           </div>
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
               VIN <span className="text-red-500">*</span>
             </label>
             <input
@@ -98,20 +98,20 @@ export default function VehicleForm() {
               onChange={(e) => setVin(e.target.value.toUpperCase())}
               placeholder="Ex: LGAG4DY39NT829063"
               required
-              className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
+              className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
               Marca
             </label>
             <select
               value={marca}
               onChange={(e) => setMarca(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
+              className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
             >
               {MARCAS.map(m => (
                 <option key={m} value={m}>{m}</option>
@@ -119,7 +119,7 @@ export default function VehicleForm() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
               Modelo
             </label>
             <input
@@ -127,11 +127,11 @@ export default function VehicleForm() {
               value={modelo}
               onChange={(e) => setModelo(e.target.value)}
               placeholder="Opcional"
-              className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
+              className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
             />
           </div>
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
               Ano
             </label>
             <input
@@ -139,14 +139,14 @@ export default function VehicleForm() {
               value={ano}
               onChange={(e) => setAno(e.target.value)}
               placeholder="Ex: 2024"
-              className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
+              className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
               KM Inicial
             </label>
             <input
@@ -154,11 +154,11 @@ export default function VehicleForm() {
               value={kmInicial}
               onChange={(e) => setKmInicial(e.target.value)}
               placeholder="KM no momento de entrada"
-              className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
+              className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
             />
           </div>
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wide text-nors-dark-gray mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
               Horas Motor (segundos)
             </label>
             <input
@@ -166,7 +166,7 @@ export default function VehicleForm() {
               value={horasMotor}
               onChange={(e) => setHorasMotor(e.target.value)}
               placeholder="Ex: 17898426"
-              className="w-full px-3 py-2 rounded-lg border border-nors-light-gray text-sm focus:outline-none focus:ring-2 focus:ring-nors-teal/30"
+              className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
             />
             {horasMotorHoras !== null && (
               <p className="text-[10px] text-nors-teal mt-1 font-semibold">
@@ -185,7 +185,7 @@ export default function VehicleForm() {
         <button
           type="submit"
           disabled={mutation.isPending || !clienteId || !vin}
-          className="inline-flex items-center gap-2 bg-nors-teal text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-nors-teal/90 transition-colors disabled:opacity-50"
+          className="inline-flex items-center gap-2 bg-nors-teal text-white h-10 px-4 rounded-md text-sm font-medium hover:opacity-90 disabled:opacity-50"
         >
           <Save size={16} />
           {mutation.isPending ? 'A guardar...' : 'Adicionar Viatura'}
