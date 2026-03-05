@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { Plus, RefreshCw, Search, ChevronDown, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { Plus, RefreshCw, Search, ChevronDown, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, SlidersHorizontal } from 'lucide-react'
 import { getEstadoContratos } from '@/services/dashboard'
 import { getPipeline } from '@/services/pipeline'
 import { StatusBadge } from '@/components/shared/StatusBadge'
@@ -38,6 +38,11 @@ export default function ContractsList() {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   const [sortKey, setSortKey] = useState<SortKey>('dias_ate_expiracao')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
+  const [showFilters, setShowFilters] = useState(false)
+  const [filterMarca, setFilterMarca] = useState('')
+  const [filterCliente, setFilterCliente] = useState('')
+  const [filterValidade, setFilterValidade] = useState('')
+  const [filterOrdenar, setFilterOrdenar] = useState('')
   const initialCollapseSet = useRef(false)
 
   const { data: contratos, isLoading } = useQuery({
@@ -75,10 +80,38 @@ export default function ContractsList() {
     }
   }, [contratos, pipelineItems])
 
+  const uniqueMarcas = useMemo(() => {
+    if (!contratos) return []
+    return [...new Set(contratos.map(c => c.marca))].sort()
+  }, [contratos])
+
+  const uniqueClientes = useMemo(() => {
+    if (!contratos) return []
+    return [...new Set(contratos.map(c => c.cliente_nome))].sort()
+  }, [contratos])
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0
+    if (filterMarca) count++
+    if (filterCliente) count++
+    if (filterValidade) count++
+    if (filterOrdenar) count++
+    return count
+  }, [filterMarca, filterCliente, filterValidade, filterOrdenar])
+
   const filtered = useMemo(() => {
     return (contratos || []).filter(c => {
       if (tipoFilter !== 'ALL' && c.tipo_contrato !== tipoFilter) return false
       if (statusFilter !== 'ALL' && c.status_contrato !== statusFilter) return false
+      if (filterMarca && c.marca !== filterMarca) return false
+      if (filterCliente && c.cliente_nome !== filterCliente) return false
+      if (filterValidade) {
+        const dias = c.dias_ate_expiracao
+        if (filterValidade === '30' && (dias < 0 || dias > 30)) return false
+        if (filterValidade === '60' && (dias < 0 || dias > 60)) return false
+        if (filterValidade === '90' && (dias < 0 || dias > 90)) return false
+        if (filterValidade === 'expirado' && dias >= 0) return false
+      }
       if (search) {
         const s = search.toLowerCase()
         return (
@@ -91,18 +124,33 @@ export default function ContractsList() {
       }
       return true
     })
-  }, [contratos, tipoFilter, statusFilter, search])
+  }, [contratos, tipoFilter, statusFilter, search, filterMarca, filterCliente, filterValidade])
 
   const sorted = useMemo(() => {
-    return [...filtered].sort((a, b) => {
-      let va: any = (a as any)[sortKey]
-      let vb: any = (b as any)[sortKey]
-      if (va == null) va = sortDir === 'asc' ? Infinity : -Infinity
-      if (vb == null) vb = sortDir === 'asc' ? Infinity : -Infinity
-      if (typeof va === 'string') return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va)
-      return sortDir === 'asc' ? va - vb : vb - va
-    })
-  }, [filtered, sortKey, sortDir])
+    const result = [...filtered]
+
+    // Apply filterOrdenar if set, otherwise use column sort
+    if (filterOrdenar === 'cliente_az') {
+      result.sort((a, b) => a.cliente_nome.localeCompare(b.cliente_nome))
+    } else if (filterOrdenar === 'validade_proximo') {
+      result.sort((a, b) => (a.dias_ate_expiracao ?? Infinity) - (b.dias_ate_expiracao ?? Infinity))
+    } else if (filterOrdenar === 'valor_maior') {
+      result.sort((a, b) => ((b.valor_mensal_usd || 0) + (b.valor_total_kz || 0)) - ((a.valor_mensal_usd || 0) + (a.valor_total_kz || 0)))
+    } else if (filterOrdenar === 'dias_restantes') {
+      result.sort((a, b) => (a.dias_ate_expiracao ?? Infinity) - (b.dias_ate_expiracao ?? Infinity))
+    } else {
+      result.sort((a, b) => {
+        let va: any = (a as any)[sortKey]
+        let vb: any = (b as any)[sortKey]
+        if (va == null) va = sortDir === 'asc' ? Infinity : -Infinity
+        if (vb == null) vb = sortDir === 'asc' ? Infinity : -Infinity
+        if (typeof va === 'string') return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va)
+        return sortDir === 'asc' ? va - vb : vb - va
+      })
+    }
+
+    return result
+  }, [filtered, sortKey, sortDir, filterOrdenar])
 
   const groups = useMemo((): ClientGroup[] => {
     const map = new Map<string, ClientGroup>()
@@ -215,7 +263,7 @@ export default function ContractsList() {
           </>
         )}
 
-        {/* Search + collapse */}
+        {/* Search + Filtros + collapse */}
         {tipoFilter !== 'PIPELINE' && (
           <>
             <div className="relative flex-1 max-w-xs">
@@ -223,12 +271,70 @@ export default function ContractsList() {
               <input type="text" placeholder="Pesquisar..." value={search} onChange={(e) => setSearch(e.target.value)}
                 className="w-full h-11 pl-10 pr-4 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20" />
             </div>
+            <button onClick={() => setShowFilters(f => !f)}
+              className="inline-flex items-center gap-1.5 bg-white text-gray-700 h-10 px-4 rounded-md text-sm font-medium border border-gray-200 hover:bg-gray-50">
+              <SlidersHorizontal size={14} />
+              Filtros
+              {activeFilterCount > 0 && (
+                <span className="bg-nors-teal text-white text-xs rounded-full w-5 h-5 inline-flex items-center justify-center ml-1">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
             <button onClick={toggleCollapseAll} className="bg-white text-gray-700 h-10 px-4 rounded-md text-sm font-medium border border-gray-200 hover:bg-gray-50">
               {collapsed.size === groups.length ? 'Expandir' : 'Colapsar'}
             </button>
           </>
         )}
       </div>
+
+      {/* Filter panel */}
+      {showFilters && tipoFilter !== 'PIPELINE' && (
+        <div className="bg-gray-50/50 border border-gray-100 rounded-lg p-4 mt-2 mb-4 flex flex-wrap gap-3 items-end">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Marca</label>
+            <select value={filterMarca} onChange={e => setFilterMarca(e.target.value)}
+              className="h-9 rounded-md border border-gray-200 text-sm bg-white px-3 min-w-[160px]">
+              <option value="">Todas</option>
+              {uniqueMarcas.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Cliente</label>
+            <select value={filterCliente} onChange={e => setFilterCliente(e.target.value)}
+              className="h-9 rounded-md border border-gray-200 text-sm bg-white px-3 min-w-[160px]">
+              <option value="">Todos</option>
+              {uniqueClientes.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Validade</label>
+            <select value={filterValidade} onChange={e => setFilterValidade(e.target.value)}
+              className="h-9 rounded-md border border-gray-200 text-sm bg-white px-3 min-w-[160px]">
+              <option value="">Todos</option>
+              <option value="30">Expira em 30 dias</option>
+              <option value="60">Expira em 60 dias</option>
+              <option value="90">Expira em 90 dias</option>
+              <option value="expirado">Expirado</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Ordenar por</label>
+            <select value={filterOrdenar} onChange={e => setFilterOrdenar(e.target.value)}
+              className="h-9 rounded-md border border-gray-200 text-sm bg-white px-3 min-w-[160px]">
+              <option value="">Padrão</option>
+              <option value="cliente_az">Cliente (A-Z)</option>
+              <option value="validade_proximo">Validade (mais próximo)</option>
+              <option value="valor_maior">Valor (maior)</option>
+              <option value="dias_restantes">Dias restantes</option>
+            </select>
+          </div>
+          <button onClick={() => { setFilterMarca(''); setFilterCliente(''); setFilterValidade(''); setFilterOrdenar('') }}
+            className="text-xs text-gray-400 hover:text-gray-600 pb-2">
+            Limpar filtros
+          </button>
+        </div>
+      )}
 
       {/* Pipeline View */}
       {tipoFilter === 'PIPELINE' ? (
