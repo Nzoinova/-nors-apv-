@@ -3,13 +3,22 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, RefreshCw, Search, ChevronDown, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { getEstadoContratos } from '@/services/dashboard'
+import { getPipeline } from '@/services/pipeline'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { formatUSD, formatKZ, formatDate } from '@/utils/formatters'
-import type { EstadoContrato } from '@/types'
+import type { EstadoContrato, PipelineItem } from '@/types'
 
 type SortKey = 'matricula' | 'marca' | 'data_validade' | 'valor_mensal_usd' | 'dias_ate_expiracao'
 type SortDir = 'asc' | 'desc'
-type TipoFilter = 'ALL' | 'APV' | 'CM'
+type TipoFilter = 'ALL' | 'APV' | 'CM' | 'PIPELINE'
+
+const PIPELINE_STATUS_LABELS: Record<string, { bg: string; text: string; label: string }> = {
+  PENDENTE_PROPOSTA: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Aguarda Proposta' },
+  PROPOSTA_RECEBIDA: { bg: 'bg-blue-50', text: 'text-blue-700', label: 'Proposta Recebida' },
+  EM_APROVACAO: { bg: 'bg-purple-50', text: 'text-purple-700', label: 'Em Aprovação' },
+  APROVADO: { bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'Aprovado' },
+  REJEITADO: { bg: 'bg-red-50', text: 'text-red-700', label: 'Rejeitado' },
+}
 
 interface ClientGroup {
   clienteId: string
@@ -36,6 +45,11 @@ export default function ContractsList() {
     queryFn: getEstadoContratos,
   })
 
+  const { data: pipelineItems, isLoading: loadingPipeline } = useQuery({
+    queryKey: ['pipeline'],
+    queryFn: getPipeline,
+  })
+
   // Status options depend on tipo filter
   const statusOptions = useMemo(() => {
     if (tipoFilter === 'CM') return ['ALL', 'ATIVO', 'CORTESIA', 'FECHADO', 'EXPIRADO']
@@ -52,13 +66,14 @@ export default function ContractsList() {
   }, [contratos, tipoFilter])
 
   const tipoCounts = useMemo(() => {
-    if (!contratos) return { ALL: 0, APV: 0, CM: 0 }
+    if (!contratos) return { ALL: 0, APV: 0, CM: 0, PIPELINE: pipelineItems?.length || 0 }
     return {
       ALL: contratos.length,
       APV: contratos.filter(c => c.tipo_contrato === 'APV').length,
       CM: contratos.filter(c => c.tipo_contrato === 'CM').length,
+      PIPELINE: pipelineItems?.length || 0,
     }
-  }, [contratos])
+  }, [contratos, pipelineItems])
 
   const filtered = useMemo(() => {
     return (contratos || []).filter(c => {
@@ -167,10 +182,10 @@ export default function ContractsList() {
       <div className="flex items-center gap-3 flex-wrap">
         <div className="flex items-center gap-1">
           {/* Tipo tabs */}
-          {(['ALL', 'APV', 'CM'] as const).map(t => (
+          {(['ALL', 'APV', 'CM', 'PIPELINE'] as const).map(t => (
             <button key={t} onClick={() => { setTipoFilter(t); setStatusFilter('ALL') }}
               className={`px-3 py-1.5 text-sm font-medium rounded-md flex items-center gap-1.5 ${tipoFilter === t ? 'bg-nors-off-black text-white' : 'text-gray-500 hover:text-gray-900'}`}>
-              {t === 'ALL' ? 'Todos' : t}
+              {t === 'ALL' ? 'Todos' : t === 'PIPELINE' ? 'Pipeline' : t}
               <span className={`text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center ${tipoFilter === t ? 'bg-white/20' : 'bg-gray-100 text-gray-500'}`}>
                 {tipoCounts[t]}
               </span>
@@ -178,128 +193,194 @@ export default function ContractsList() {
           ))}
         </div>
 
-        {/* Vertical divider */}
-        <div className="w-px h-6 bg-gray-200" />
+        {tipoFilter !== 'PIPELINE' && (
+          <>
+            {/* Vertical divider */}
+            <div className="w-px h-6 bg-gray-200" />
 
-        {/* Status pills */}
-        <div className="flex items-center gap-1">
-          {statusOptions.map(s => (
-            <button key={s} onClick={() => setStatusFilter(s)}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md flex items-center gap-1 ${statusFilter === s ? 'bg-nors-off-black text-white' : 'text-gray-500 hover:text-gray-900'}`}>
-              {s === 'ALL' ? 'Todos' : s}
-              {(statusCounts[s] ?? 0) > 0 && (
-                <span className={`text-[9px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center ${statusFilter === s ? 'bg-white/20' : 'bg-gray-100 text-gray-500'}`}>
-                  {statusCounts[s]}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
+            {/* Status pills */}
+            <div className="flex items-center gap-1">
+              {statusOptions.map(s => (
+                <button key={s} onClick={() => setStatusFilter(s)}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md flex items-center gap-1 ${statusFilter === s ? 'bg-nors-off-black text-white' : 'text-gray-500 hover:text-gray-900'}`}>
+                  {s === 'ALL' ? 'Todos' : s}
+                  {(statusCounts[s] ?? 0) > 0 && (
+                    <span className={`text-[9px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center ${statusFilter === s ? 'bg-white/20' : 'bg-gray-100 text-gray-500'}`}>
+                      {statusCounts[s]}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
 
         {/* Search + collapse */}
-        <div className="relative flex-1 max-w-xs">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input type="text" placeholder="Pesquisar..." value={search} onChange={(e) => setSearch(e.target.value)}
-            className="w-full h-11 pl-10 pr-4 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20" />
-        </div>
-        <button onClick={toggleCollapseAll} className="bg-white text-gray-700 h-10 px-4 rounded-md text-sm font-medium border border-gray-200 hover:bg-gray-50">
-          {collapsed.size === groups.length ? 'Expandir' : 'Colapsar'}
-        </button>
-      </div>
-
-      {/* Grouped cards */}
-      <div className="space-y-3">
-        {groups.map(group => {
-          const isCollapsed = collapsed.has(group.clienteId)
-          const hasCM = group.contratos.some(c => c.tipo_contrato === 'CM')
-          const hasAPV = group.contratos.some(c => c.tipo_contrato === 'APV')
-          return (
-            <div key={group.clienteId} className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-              {/* Group Header */}
-              <button onClick={() => toggleCollapse(group.clienteId)} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50/30 border-b border-gray-100 cursor-pointer text-left">
-                {isCollapsed
-                  ? <ChevronRight size={16} className="text-gray-400 flex-shrink-0 transition-transform" />
-                  : <ChevronDown size={16} className="text-gray-400 flex-shrink-0 transition-transform" />}
-                <div className="flex-1 min-w-0">
-                  <span className="text-base font-semibold text-gray-900">{group.shortName}</span>
-                  <div className="flex gap-1 mt-0.5">
-                    {hasAPV && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#415A67', color: 'white' }}>APV</span>}
-                    {hasCM && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">CM</span>}
-                  </div>
-                </div>
-                <span className="text-sm text-gray-500 flex-shrink-0">
-                  {group.totalViaturas} viatura{group.totalViaturas !== 1 ? 's' : ''} · {group.totalReceitaUSD > 0 ? `${formatUSD(group.totalReceitaUSD)}/mês` : ''}{group.totalValorKZ > 0 ? formatKZ(group.totalValorKZ) : ''}
-                </span>
-              </button>
-
-              {/* Table */}
-              {!isCollapsed && (
-                <>
-                <div className="px-4 py-1.5 text-xs text-gray-400">
-                  {group.contratos.length} contratos{(group.statusCounts['ATIVO'] || 0) > 0 ? `: ${group.statusCounts['ATIVO']} activos` : ''}
-                  {(group.statusCounts['A RENOVAR'] || 0) > 0 ? `, ${group.statusCounts['A RENOVAR']} a renovar` : ''}
-                  {(group.statusCounts['CORTESIA'] || 0) > 0 ? `, ${group.statusCounts['CORTESIA']} cortesia` : ''}
-                  {(group.statusCounts['EXPIRADO'] || 0) > 0 ? `, ${group.statusCounts['EXPIRADO']} expirados` : ''}
-                  {(group.statusCounts['FECHADO'] || 0) > 0 ? `, ${group.statusCounts['FECHADO']} fechados` : ''}
-                </div>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-50/50">
-                      <th className="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 w-8">Tipo</th>
-                      <ThSort label="Matrícula" column="matricula" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="left" />
-                      <ThSort label="Modelo" column="marca" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="left" />
-                      <ThSort label="Validade" column="data_validade" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="center" />
-                      <th className="text-right px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Valor</th>
-                      <th className="text-center px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                      <ThSort label="Dias" column="dias_ate_expiracao" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="center" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {group.contratos.map(c => (
-                      <tr key={c.contrato_id} className="border-b border-gray-100 hover:bg-gray-50/50">
-                        <td className="px-4 py-3">
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
-                            style={c.tipo_contrato === 'APV' ? { backgroundColor: '#415A67', color: 'white' } : { backgroundColor: '#F2F2F2', color: '#575757' }}>
-                            {c.tipo_contrato}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm font-mono font-medium">
-                          <Link to={`/contratos/${c.contrato_id}`} className="text-nors-teal hover:underline">
-                            {c.matricula || <span className="text-gray-400">—</span>}
-                          </Link>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">{c.modelo || c.marca}</td>
-                        <td className="px-4 py-3 text-sm text-center text-gray-600">{formatDate(c.data_validade)}</td>
-                        <td className="px-4 py-3 text-sm text-right font-medium text-gray-900">
-                          {c.tipo_contrato === 'APV'
-                            ? (c.valor_mensal_usd ? formatUSD(c.valor_mensal_usd) + '/mês' : '—')
-                            : (c.valor_total_kz ? formatKZ(c.valor_total_kz) : '—')
-                          }
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <StatusBadge status={c.status_contrato} />
-                        </td>
-                        <td className="px-4 py-3 text-sm text-center">
-                          <span className={`font-semibold ${c.dias_ate_expiracao < 0 ? 'text-red-600' : c.dias_ate_expiracao <= 60 ? 'text-amber-600' : 'text-gray-500'}`}>
-                            {c.dias_ate_expiracao}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                </>
-              )}
+        {tipoFilter !== 'PIPELINE' && (
+          <>
+            <div className="relative flex-1 max-w-xs">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input type="text" placeholder="Pesquisar..." value={search} onChange={(e) => setSearch(e.target.value)}
+                className="w-full h-11 pl-10 pr-4 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20" />
             </div>
-          )
-        })}
-
-        {groups.length === 0 && (
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-8 text-center">
-            <p className="text-sm text-gray-500">Nenhum contrato encontrado</p>
-          </div>
+            <button onClick={toggleCollapseAll} className="bg-white text-gray-700 h-10 px-4 rounded-md text-sm font-medium border border-gray-200 hover:bg-gray-50">
+              {collapsed.size === groups.length ? 'Expandir' : 'Colapsar'}
+            </button>
+          </>
         )}
       </div>
+
+      {/* Pipeline View */}
+      {tipoFilter === 'PIPELINE' ? (
+        <div className="space-y-3">
+          {loadingPipeline ? (
+            <div className="flex items-center justify-center h-32"><RefreshCw className="animate-spin text-nors-teal" size={24} /></div>
+          ) : (pipelineItems && pipelineItems.length > 0) ? (
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50/50">
+                    <th className="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Cliente</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Viatura</th>
+                    <th className="text-center px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Status Pipeline</th>
+                    <th className="text-center px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Criado</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Origem CM</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pipelineItems.map(p => {
+                    const statusInfo = PIPELINE_STATUS_LABELS[p.status_pipeline] || { bg: 'bg-gray-100', text: 'text-gray-600', label: p.status_pipeline }
+                    const daysSince = Math.floor((Date.now() - new Date(p.data_pipeline).getTime()) / (1000 * 60 * 60 * 24))
+                    return (
+                      <tr key={p.contrato_id} className="border-b border-gray-100 hover:bg-gray-50/50">
+                        <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                          <Link to={`/contratos/${p.contrato_id}`} className="text-nors-teal hover:underline">
+                            {p.cliente_nome?.split(' - ')[0] || '—'}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600">
+                          {p.marca} {p.modelo || ''} — {p.matricula || p.vin?.slice(-6) || '—'}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusInfo.bg} ${statusInfo.text}`}>
+                            {statusInfo.label}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-center text-gray-600">
+                          {formatDate(p.data_pipeline)}
+                          <span className="text-[10px] text-gray-400 ml-1">({daysSince}d)</span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-500">
+                          {p.origem_validade ? `CM expirou ${formatDate(p.origem_validade)}` : '—'}
+                          {p.origem_valor_kz != null && <span className="text-[10px] text-gray-400 ml-1">({formatKZ(p.origem_valor_kz)})</span>}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-8 text-center">
+              <p className="text-sm text-gray-500">Nenhum item no pipeline</p>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* Grouped cards */
+        <div className="space-y-3">
+          {groups.map(group => {
+            const isCollapsed = collapsed.has(group.clienteId)
+            const hasCM = group.contratos.some(c => c.tipo_contrato === 'CM')
+            const hasAPV = group.contratos.some(c => c.tipo_contrato === 'APV')
+            return (
+              <div key={group.clienteId} className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                {/* Group Header */}
+                <button onClick={() => toggleCollapse(group.clienteId)} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50/30 border-b border-gray-100 cursor-pointer text-left">
+                  {isCollapsed
+                    ? <ChevronRight size={16} className="text-gray-400 flex-shrink-0 transition-transform" />
+                    : <ChevronDown size={16} className="text-gray-400 flex-shrink-0 transition-transform" />}
+                  <div className="flex-1 min-w-0">
+                    <span className="text-base font-semibold text-gray-900">{group.shortName}</span>
+                    <div className="flex gap-1 mt-0.5">
+                      {hasAPV && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#415A67', color: 'white' }}>APV</span>}
+                      {hasCM && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">CM</span>}
+                    </div>
+                  </div>
+                  <span className="text-sm text-gray-500 flex-shrink-0">
+                    {group.totalViaturas} viatura{group.totalViaturas !== 1 ? 's' : ''} · {group.totalReceitaUSD > 0 ? `${formatUSD(group.totalReceitaUSD)}/mês` : ''}{group.totalValorKZ > 0 ? formatKZ(group.totalValorKZ) : ''}
+                  </span>
+                </button>
+
+                {/* Table */}
+                {!isCollapsed && (
+                  <>
+                  <div className="px-4 py-1.5 text-xs text-gray-400">
+                    {group.contratos.length} contratos{(group.statusCounts['ATIVO'] || 0) > 0 ? `: ${group.statusCounts['ATIVO']} activos` : ''}
+                    {(group.statusCounts['A RENOVAR'] || 0) > 0 ? `, ${group.statusCounts['A RENOVAR']} a renovar` : ''}
+                    {(group.statusCounts['CORTESIA'] || 0) > 0 ? `, ${group.statusCounts['CORTESIA']} cortesia` : ''}
+                    {(group.statusCounts['EXPIRADO'] || 0) > 0 ? `, ${group.statusCounts['EXPIRADO']} expirados` : ''}
+                    {(group.statusCounts['FECHADO'] || 0) > 0 ? `, ${group.statusCounts['FECHADO']} fechados` : ''}
+                  </div>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50/50">
+                        <th className="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 w-8">Tipo</th>
+                        <ThSort label="Matrícula" column="matricula" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="left" />
+                        <ThSort label="Modelo" column="marca" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="left" />
+                        <ThSort label="Validade" column="data_validade" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="center" />
+                        <th className="text-right px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Valor</th>
+                        <th className="text-center px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                        <ThSort label="Dias" column="dias_ate_expiracao" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="center" />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {group.contratos.map(c => (
+                        <tr key={c.contrato_id} className="border-b border-gray-100 hover:bg-gray-50/50">
+                          <td className="px-4 py-3">
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                              style={c.tipo_contrato === 'APV' ? { backgroundColor: '#415A67', color: 'white' } : { backgroundColor: '#F2F2F2', color: '#575757' }}>
+                              {c.tipo_contrato}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm font-mono font-medium">
+                            <Link to={`/contratos/${c.contrato_id}`} className="text-nors-teal hover:underline">
+                              {c.matricula || <span className="text-gray-400">—</span>}
+                            </Link>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{c.modelo || c.marca}</td>
+                          <td className="px-4 py-3 text-sm text-center text-gray-600">{formatDate(c.data_validade)}</td>
+                          <td className="px-4 py-3 text-sm text-right font-medium text-gray-900">
+                            {c.tipo_contrato === 'APV'
+                              ? (c.valor_mensal_usd ? formatUSD(c.valor_mensal_usd) + '/mês' : '—')
+                              : (c.valor_total_kz ? formatKZ(c.valor_total_kz) : '—')
+                            }
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <StatusBadge status={c.status_contrato} />
+                          </td>
+                          <td className="px-4 py-3 text-sm text-center">
+                            <span className={`font-semibold ${c.dias_ate_expiracao < 0 ? 'text-red-600' : c.dias_ate_expiracao <= 60 ? 'text-amber-600' : 'text-gray-500'}`}>
+                              {c.dias_ate_expiracao}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  </>
+                )}
+              </div>
+            )
+          })}
+
+          {groups.length === 0 && (
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-8 text-center">
+              <p className="text-sm text-gray-500">Nenhum contrato encontrado</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
