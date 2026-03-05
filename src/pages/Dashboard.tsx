@@ -35,6 +35,7 @@ const CHART_TEAL = '#415A67'
 
 export default function Dashboard() {
   const [proposalContrato, setProposalContrato] = useState<EstadoContrato | null>(null)
+  const [donutFilter, setDonutFilter] = useState<'APV' | 'CM' | 'Todos'>('APV')
 
   const { data: kpis, isLoading: loadingKPIs } = useQuery({
     queryKey: ['dashboard-kpis'],
@@ -72,10 +73,21 @@ export default function Dashboard() {
     enabled: cmOrigemIds.length > 0,
   })
 
-  const statusData = useMemo(() => {
+  const filteredContratos = useMemo(() => {
     if (!contratos) return []
+    if (donutFilter === 'Todos') return contratos
+    return contratos.filter(c => c.tipo_contrato === donutFilter)
+  }, [contratos, donutFilter])
+
+  const statusData = useMemo(() => {
+    if (filteredContratos.length === 0) return []
+    const allowedStatuses =
+      donutFilter === 'APV' ? new Set(['ATIVO', 'A RENOVAR', 'EXPIRADO'])
+      : donutFilter === 'CM' ? new Set(['ATIVO', 'A RENOVAR', 'FECHADO', 'EXPIRADO'])
+      : null
     const counts: Record<string, number> = {}
-    contratos.forEach(c => {
+    filteredContratos.forEach(c => {
+      if (allowedStatuses && !allowedStatuses.has(c.status_contrato)) return
       counts[c.status_contrato] = (counts[c.status_contrato] || 0) + 1
     })
     return Object.entries(counts)
@@ -85,7 +97,7 @@ export default function Dashboard() {
         value,
         color: STATUS_COLORS[status] || '#9CA3AF',
       }))
-  }, [contratos])
+  }, [filteredContratos, donutFilter])
 
   const calendarData = useMemo(() => {
     const MESES_PT = [
@@ -230,6 +242,24 @@ export default function Dashboard() {
             <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Estado dos Contratos</h3>
           </div>
           <div className="p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="flex gap-1">
+                {(['APV', 'CM', 'Todos'] as const).map(opt => (
+                  <button
+                    key={opt}
+                    onClick={() => setDonutFilter(opt)}
+                    className={
+                      donutFilter === opt
+                        ? 'bg-nors-off-black text-white rounded-md px-2.5 py-1 text-xs font-medium'
+                        : 'text-gray-400 hover:text-gray-600 px-2.5 py-1 text-xs font-medium'
+                    }
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+              <span className="text-[10px] text-gray-400">{donutFilter} ({filteredContratos.length})</span>
+            </div>
             {statusData.length > 0 ? (
               <>
                 <div className="h-40">
