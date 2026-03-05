@@ -24,7 +24,7 @@ interface ClientGroup {
 
 export default function ContractsList() {
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
-  const [tipoFilter, setTipoFilter] = useState<TipoFilter>('ALL')
+  const [tipoFilter, setTipoFilter] = useState<TipoFilter>('APV')
   const [search, setSearch] = useState('')
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   const [sortKey, setSortKey] = useState<SortKey>('dias_ate_expiracao')
@@ -227,35 +227,21 @@ export default function ContractsList() {
                     {hasCM && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">CM</span>}
                   </div>
                 </div>
-                <div className="flex items-center gap-4 flex-shrink-0">
-                  <div className="text-right">
-                    <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Viaturas</p>
-                    <p className="text-sm font-semibold text-gray-900">{group.totalViaturas}</p>
-                  </div>
-                  {group.totalReceitaUSD > 0 && (
-                    <div className="text-right">
-                      <p className="text-xs font-medium uppercase tracking-wider text-gray-400">APV/Mês</p>
-                      <p className="text-sm font-semibold" style={{ color: '#415A67' }}>{formatUSD(group.totalReceitaUSD)}</p>
-                    </div>
-                  )}
-                  {group.totalValorKZ > 0 && (
-                    <div className="text-right">
-                      <p className="text-xs font-medium uppercase tracking-wider text-gray-400">CM Total</p>
-                      <p className="text-sm font-semibold text-gray-600">{formatKZ(group.totalValorKZ)}</p>
-                    </div>
-                  )}
-                  <div className="flex gap-1.5 flex-wrap justify-end">
-                    {(group.statusCounts['ATIVO'] || 0) > 0 && <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{group.statusCounts['ATIVO']}</span>}
-                    {(group.statusCounts['A RENOVAR'] || 0) > 0 && <span className="bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{group.statusCounts['A RENOVAR']}</span>}
-                    {(group.statusCounts['CORTESIA'] || 0) > 0 && <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{group.statusCounts['CORTESIA']}</span>}
-                    {(group.statusCounts['FECHADO'] || 0) > 0 && <span className="bg-gray-100 text-gray-600 border border-gray-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{group.statusCounts['FECHADO']}</span>}
-                    {(group.statusCounts['EXPIRADO'] || 0) > 0 && <span className="bg-red-50 text-red-700 border border-red-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{group.statusCounts['EXPIRADO']}</span>}
-                  </div>
-                </div>
+                <span className="text-sm text-gray-500 flex-shrink-0">
+                  {group.totalViaturas} viatura{group.totalViaturas !== 1 ? 's' : ''} · {group.totalReceitaUSD > 0 ? `${formatUSD(group.totalReceitaUSD)}/mês` : ''}{group.totalValorKZ > 0 ? formatKZ(group.totalValorKZ) : ''}
+                </span>
               </button>
 
               {/* Table */}
               {!isCollapsed && (
+                <>
+                <div className="px-4 py-1.5 text-xs text-gray-400">
+                  {group.contratos.length} contratos{(group.statusCounts['ATIVO'] || 0) > 0 ? `: ${group.statusCounts['ATIVO']} activos` : ''}
+                  {(group.statusCounts['A RENOVAR'] || 0) > 0 ? `, ${group.statusCounts['A RENOVAR']} a renovar` : ''}
+                  {(group.statusCounts['CORTESIA'] || 0) > 0 ? `, ${group.statusCounts['CORTESIA']} cortesia` : ''}
+                  {(group.statusCounts['EXPIRADO'] || 0) > 0 ? `, ${group.statusCounts['EXPIRADO']} expirados` : ''}
+                  {(group.statusCounts['FECHADO'] || 0) > 0 ? `, ${group.statusCounts['FECHADO']} fechados` : ''}
+                </div>
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50/50">
@@ -302,6 +288,7 @@ export default function ContractsList() {
                     ))}
                   </tbody>
                 </table>
+                </>
               )}
             </div>
           )
