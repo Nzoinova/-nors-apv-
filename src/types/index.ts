@@ -41,6 +41,10 @@ export interface Contrato {
   km_anuais_contratados: number
   km_total_contratados: number
   observacoes: string | null
+  status_pipeline: string | null
+  notas_pipeline: string | null
+  data_pipeline: string | null
+  contrato_origem_id: string | null
   created_at: string
   updated_at: string
   viatura?: Viatura
@@ -151,4 +155,23 @@ export interface ResumoCliente {
   total_contratos: number
   contratos_ativos: number
   receita_mensal_usd: number
+}
+
+export interface PipelineItem {
+  contrato_id: string
+  cliente_id: string
+  cliente_nome: string
+  viatura_id: string
+  matricula: string | null
+  vin: string
+  marca: string
+  modelo: string | null
+  km_inicial: number | null
+  horas_motor_segundos: number | null
+  status_pipeline: string
+  notas_pipeline: string | null
+  data_pipeline: string
+  contrato_origem_id: string | null
+  origem_validade: string | null
+  origem_valor_kz: number | null
 }

@@ -21,9 +21,10 @@ const NAV_ITEMS = [
 interface SidebarProps {
   alertCount?: number
   totalAlerts?: number
+  pipelineCount?: number
 }
 
-export function Sidebar({ alertCount = 0, totalAlerts = 0 }: SidebarProps) {
+export function Sidebar({ alertCount = 0, totalAlerts = 0, pipelineCount = 0 }: SidebarProps) {
   return (
     <aside className="fixed top-0 left-0 h-screen w-56 bg-nors-black flex flex-col z-30 shadow-lg">
       {/* Logo */}
@@ -93,6 +94,11 @@ export function Sidebar({ alertCount = 0, totalAlerts = 0 }: SidebarProps) {
             {label === 'Dashboard' && alertCount === 0 && totalAlerts > 0 && (
               <span className="ml-auto text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center" style={{ backgroundColor: '#415A67' }}>
                 {totalAlerts > 9 ? '9+' : totalAlerts}
+              </span>
+            )}
+            {label === 'Contratos' && pipelineCount > 0 && (
+              <span className="ml-auto bg-amber-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {pipelineCount > 9 ? '9+' : pipelineCount}
               </span>
             )}
           </NavLink>
