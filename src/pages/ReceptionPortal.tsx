@@ -63,8 +63,12 @@ export default function ReceptionPortal() {
   return (
     <div className="min-h-screen bg-nors-off-white flex flex-col items-center">
       {/* Header */}
-      <header className="pt-16 pb-8 text-center">
-        <h1 className="text-4xl font-extrabold text-nors-black tracking-tight">NORS</h1>
+      <header className="pt-16 pb-8 text-center flex flex-col items-center">
+        <img
+          src={`${import.meta.env.BASE_URL}nors-logo-dark.png`}
+          alt="NORS"
+          style={{ height: 40, width: 'auto' }}
+        />
         <p className="text-sm font-light text-nors-medium-gray mt-1">Verificação de Contratos</p>
       </header>
 
@@ -120,8 +124,13 @@ export default function ReceptionPortal() {
       </div>
 
       {/* Footer */}
-      <footer className="py-6">
-        <p className="text-xs text-nors-light-gray-2">NORS Trucks & Buses Angola VT</p>
+      <footer className="py-6 flex flex-col items-center">
+        <img
+          src={`${import.meta.env.BASE_URL}nors-tagline-dark.png`}
+          alt="Making it work."
+          style={{ height: 12, width: 'auto', opacity: 0.4 }}
+        />
+        <p className="text-xs text-nors-light-gray-2 mt-1">NORS Trucks & Buses Angola VT</p>
       </footer>
     </div>
   )

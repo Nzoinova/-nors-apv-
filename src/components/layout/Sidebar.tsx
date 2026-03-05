@@ -27,9 +27,13 @@ export function Sidebar({ alertCount = 0, totalAlerts = 0 }: SidebarProps) {
   return (
     <aside className="fixed top-0 left-0 h-screen w-56 bg-nors-black flex flex-col z-30 shadow-lg">
       {/* Logo */}
-      <div className="p-5 pb-4 border-b border-white/10 mb-4">
-        <h1 className="text-white font-extrabold text-xl tracking-tight">NORS</h1>
-        <p className="text-nors-light-gray-2 text-[10px] font-light uppercase tracking-widest mt-0.5">
+      <div className="px-4 pt-5 pb-4 border-b border-white/10 mb-2">
+        <img
+          src={`${import.meta.env.BASE_URL}nors-logo-white.png`}
+          alt="NORS"
+          style={{ height: 28, width: 'auto' }}
+        />
+        <p className="text-xs uppercase tracking-widest mt-1" style={{ color: '#ABABAB' }}>
           GESTÃO APV
         </p>
       </div>
@@ -96,12 +100,14 @@ export function Sidebar({ alertCount = 0, totalAlerts = 0 }: SidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-white/10">
-        <p className="text-nors-medium-gray text-[10px] font-light">
+      <div className="mt-auto p-4 border-t border-white/10">
+        <img
+          src={`${import.meta.env.BASE_URL}nors-tagline-white.png`}
+          alt="Making it work."
+          style={{ height: 14, width: 'auto', opacity: 0.6 }}
+        />
+        <p className="text-xs text-gray-600 mt-1">
           NORS Trucks & Buses Angola VT
-        </p>
-        <p className="text-nors-dark-gray text-[10px] font-light mt-0.5">
-          Making it work.
         </p>
       </div>
     </aside>
