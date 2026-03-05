@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Save } from 'lucide-react'
 import { getClientes } from '@/services/clients'
@@ -51,9 +51,9 @@ export default function VehicleForm() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <Link to="/viaturas" className="inline-flex items-center gap-1.5 text-sm text-nors-teal hover:underline">
+      <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1.5 text-sm text-nors-teal hover:underline">
         <ArrowLeft size={16} /> Voltar
-      </Link>
+      </button>
 
       <h1 className="text-2xl font-bold tracking-tight">Nova Viatura</h1>
 

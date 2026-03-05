@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, RefreshCw, Pencil, X, Save } from 'lucide-react'
 import { getContrato, updateContrato } from '@/services/contracts'
@@ -12,6 +12,7 @@ import { getConfig } from '@/services/config'
 
 export default function ContractDetail() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [editing, setEditing] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
@@ -105,9 +106,9 @@ export default function ContractDetail() {
         onCancel={() => setShowConfirm(false)}
       />
 
-      <Link to="/contratos" className="inline-flex items-center gap-1.5 text-sm text-nors-teal hover:underline">
+      <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1.5 text-sm text-nors-teal hover:underline">
         <ArrowLeft size={16} /> Voltar a Contratos
-      </Link>
+      </button>
 
       <div className="flex items-start justify-between">
         <div>
