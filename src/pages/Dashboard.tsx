@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useContext } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import {
@@ -15,6 +15,7 @@ import { ProposalModal } from '@/components/shared/ProposalModal'
 import { formatUSD, formatKZ, formatDate, formatNumber } from '@/utils/formatters'
 import { generateMonthlyReport } from '@/services/report'
 import { getEntradasHoje } from '@/services/entradas'
+import { TourContext } from '@/components/shared/OnboardingTour'
 import type { EstadoContrato } from '@/types'
 
 const STATUS_COLORS: Record<string, string> = {
@@ -36,6 +37,7 @@ const STATUS_LABELS: Record<string, string> = {
 const CHART_TEAL = '#415A67'
 
 export default function Dashboard() {
+  const { startTour } = useContext(TourContext)
   const [proposalContrato, setProposalContrato] = useState<EstadoContrato | null>(null)
   const [donutFilter, setDonutFilter] = useState<'APV' | 'CM' | 'Todos'>('APV')
   const [generatingReport, setGeneratingReport] = useState(false)
@@ -229,6 +231,13 @@ export default function Dashboard() {
             </div>
           )}
           <div className="flex gap-2">
+            <button
+              onClick={startTour}
+              className="rounded-full w-8 h-8 border border-gray-200 text-gray-500 hover:border-nors-teal hover:text-nors-teal transition-colors text-sm font-medium"
+              title="Tour do sistema"
+            >
+              ?
+            </button>
             <button
               onClick={handleGenerateReport}
               disabled={generatingReport || !kpis || !contratos}

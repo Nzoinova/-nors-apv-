@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Sidebar } from './Sidebar'
+import { TourProvider } from '@/components/shared/OnboardingTour'
 import { getAlertas } from '@/services/dashboard'
 import { getPipeline } from '@/services/pipeline'
 
@@ -22,11 +23,13 @@ export function Layout() {
   const pipelineCount = pipelineItems?.filter(p => p.status_pipeline === 'PENDENTE_PROPOSTA').length || 0
 
   return (
-    <div className="min-h-screen bg-nors-off-white">
-      <Sidebar alertCount={highPriorityCount} totalAlerts={totalAlerts} pipelineCount={pipelineCount} />
-      <main className="ml-56 p-6">
-        <Outlet />
-      </main>
-    </div>
+    <TourProvider>
+      <div className="min-h-screen bg-nors-off-white">
+        <Sidebar alertCount={highPriorityCount} totalAlerts={totalAlerts} pipelineCount={pipelineCount} />
+        <main className="ml-56 p-6">
+          <Outlet />
+        </main>
+      </div>
+    </TourProvider>
   )
 }
