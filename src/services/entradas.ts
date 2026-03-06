@@ -42,5 +42,16 @@ export async function registarEntrada(entrada: NovaEntrada) {
   return data
 }
 
-// TODO: Dashboard alert for new entradas — query entradas_viaturas
-// WHERE data_entrada > now() - interval '24 hours' AND notificado = false
+export async function getEntradasHoje() {
+  const hoje = new Date()
+  hoje.setHours(0, 0, 0, 0)
+
+  const { data, error } = await supabase
+    .from('entradas_viaturas')
+    .select('*')
+    .gte('data_entrada', hoje.toISOString())
+    .order('data_entrada', { ascending: false })
+
+  if (error) throw error
+  return data ?? []
+}
