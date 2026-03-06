@@ -1,16 +1,9 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { Search, CheckCircle, CheckCircle2, AlertTriangle, XCircle, Loader2 } from 'lucide-react'
 import { searchVehicleContract, type ReceptionSearchResult } from '@/services/reception'
 import { registarEntrada, type NovaEntrada } from '@/services/entradas'
 import { formatDate } from '@/utils/formatters'
 import type { EstadoContrato } from '@/types'
-
-const TIPO_SERVICO_OPTIONS = [
-  { value: 'B1', label: 'B1 — Revisão Básica 1' },
-  { value: 'B2', label: 'B2 — Revisão Básica 2' },
-  { value: 'B3', label: 'B3 — Revisão Básica 3' },
-  { value: 'MC', label: 'MC — Manutenção Completa' },
-]
 
 const UNIDADE_OPTIONS = ['Luanda (Icolo e Bengo)', 'Lobito', 'Lubango']
 
@@ -130,6 +123,30 @@ export default function ReceptionPortal() {
   const isActivo = bestContract?.status_contrato === 'ATIVO' || bestContract?.status_contrato === 'A RENOVAR'
   const formValid = !!kmEntrada && !!tipoServico && !!unidade
 
+  const marca = bestContract?.marca ?? vehicleFallback?.marca
+  const tipoServicoOptions = useMemo(() =>
+    marca === 'Dongfeng'
+      ? [
+          { value: 'B1', label: 'B1 — Revisão Básica 1' },
+          { value: 'B2', label: 'B2 — Revisão Básica 2' },
+          { value: 'B3', label: 'B3 — Revisão Básica 3' },
+          { value: 'B4', label: 'B4 — Revisão Básica 4' },
+          { value: 'MC', label: 'MC — Manutenção Completa' },
+        ]
+      : [
+          { value: 'B1', label: 'B1 — Revisão Básica 1' },
+          { value: 'B2', label: 'B2 — Revisão Básica 2' },
+          { value: 'B3', label: 'B3 — Revisão Básica 3' },
+          { value: 'MC', label: 'MC — Manutenção Completa' },
+        ],
+    [marca]
+  )
+
+  // Reset tipo_servico when search result changes
+  useEffect(() => {
+    setTipoServico('')
+  }, [result])
+
   return (
     <div className="min-h-screen bg-nors-off-white flex flex-col items-center">
       {/* Header */}
@@ -217,7 +234,7 @@ export default function ReceptionPortal() {
                 className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-nors-teal"
               >
                 <option value="">Selecionar...</option>
-                {TIPO_SERVICO_OPTIONS.map((opt) => (
+                {tipoServicoOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
