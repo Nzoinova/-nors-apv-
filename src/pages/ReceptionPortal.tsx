@@ -1,8 +1,18 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Search, CheckCircle, AlertTriangle, XCircle, Loader2 } from 'lucide-react'
+import { Search, CheckCircle, CheckCircle2, AlertTriangle, XCircle, Loader2 } from 'lucide-react'
 import { searchVehicleContract, type ReceptionSearchResult } from '@/services/reception'
+import { registarEntrada, type NovaEntrada } from '@/services/entradas'
 import { formatDate } from '@/utils/formatters'
 import type { EstadoContrato } from '@/types'
+
+const TIPO_SERVICO_OPTIONS = [
+  { value: 'B1', label: 'B1 — Revisão Básica 1' },
+  { value: 'B2', label: 'B2 — Revisão Básica 2' },
+  { value: 'B3', label: 'B3 — Revisão Básica 3' },
+  { value: 'MC', label: 'MC — Manutenção Completa' },
+]
+
+const UNIDADE_OPTIONS = ['Luanda (Icolo e Bengo)', 'Lobito', 'Lubango']
 
 export default function ReceptionPortal() {
   const [query, setQuery] = useState('')
@@ -12,6 +22,34 @@ export default function ReceptionPortal() {
   const [lastSearchTime, setLastSearchTime] = useState<Date | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Entry registration state
+  const [showForm, setShowForm] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [successData, setSuccessData] = useState<{ matricula: string; tipo_servico: string; unidade: string } | null>(null)
+  const [kmEntrada, setKmEntrada] = useState('')
+  const [tipoServico, setTipoServico] = useState('')
+  const [unidade, setUnidade] = useState('')
+  const [observacoes, setObservacoes] = useState('')
+
+  const resetRegistration = () => {
+    setShowForm(false)
+    setIsSubmitting(false)
+    setSuccessData(null)
+    setKmEntrada('')
+    setTipoServico('')
+    setUnidade('')
+    setObservacoes('')
+  }
+
+  const resetAll = () => {
+    setQuery('')
+    setResult(null)
+    setHasSearched(false)
+    setLastSearchTime(null)
+    resetRegistration()
+    inputRef.current?.focus()
+  }
 
   const doSearch = useCallback(async (searchQuery: string) => {
     const trimmed = searchQuery.trim()
@@ -56,9 +94,41 @@ export default function ReceptionPortal() {
     }
   }
 
+  const handleSubmitEntrada = async () => {
+    if (!bestContract || !kmEntrada || !tipoServico || !unidade) return
+    setIsSubmitting(true)
+    try {
+      const entrada: NovaEntrada = {
+        viatura_id: bestContract.viatura_id,
+        contrato_id: bestContract.contrato_id,
+        matricula: bestContract.matricula ?? '',
+        cliente_nome: bestContract.cliente_nome,
+        km_entrada: parseInt(kmEntrada, 10),
+        tipo_servico: tipoServico,
+        unidade,
+        observacoes: observacoes.trim() || undefined,
+        data_entrada: new Date().toISOString(),
+        registado_por: 'Recepção',
+      }
+      await registarEntrada(entrada)
+      setSuccessData({
+        matricula: bestContract.matricula ?? '—',
+        tipo_servico: tipoServico,
+        unidade,
+      })
+    } catch (err) {
+      console.error('Erro ao registar entrada:', err)
+      alert('Erro ao registar entrada. Tente novamente.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   // Determine which contract to display (best status)
   const bestContract = result?.contracts?.[0] ?? null
   const vehicleFallback = result?.vehicle ?? null
+  const isActivo = bestContract?.status_contrato === 'ATIVO' || bestContract?.status_contrato === 'A RENOVAR'
+  const formValid = !!kmEntrada && !!tipoServico && !!unidade
 
   return (
     <div className="min-h-screen bg-nors-off-white flex flex-col items-center">
@@ -99,8 +169,116 @@ export default function ReceptionPortal() {
       <div className="w-full max-w-[600px] px-6 mt-6 flex-1">
         {isLoading && <LoadingState />}
 
-        {!isLoading && hasSearched && bestContract && (
+        {!isLoading && hasSearched && bestContract && !successData && (
           <ContractCard contract={bestContract} />
+        )}
+
+        {/* Action buttons for ACTIVO contracts */}
+        {!isLoading && hasSearched && bestContract && isActivo && !showForm && !successData && (
+          <div className="flex gap-3 mt-4">
+            <button
+              onClick={resetAll}
+              className="flex-1 border border-gray-300 text-gray-600 rounded-md px-4 py-2 hover:bg-gray-50 transition-colors"
+            >
+              Apenas Verificação
+            </button>
+            <button
+              onClick={() => setShowForm(true)}
+              className="flex-1 rounded-md px-4 py-2 text-white hover:opacity-90 transition-opacity"
+              style={{ backgroundColor: '#415A67' }}
+            >
+              Registar Entrada para Serviço →
+            </button>
+          </div>
+        )}
+
+        {/* Registration form */}
+        {!isLoading && showForm && !successData && (
+          <div className="mt-6 bg-white rounded-xl shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-nors-off-black mb-6">Registo de Entrada</h3>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">KM Actual</label>
+              <input
+                type="number"
+                value={kmEntrada}
+                onChange={(e) => setKmEntrada(e.target.value)}
+                placeholder="Ex: 167119"
+                className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-nors-teal"
+              />
+              <p className="text-xs text-gray-500 mt-1">Quilometragem no painel da viatura neste momento</p>
+            </div>
+
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Serviço</label>
+              <select
+                value={tipoServico}
+                onChange={(e) => setTipoServico(e.target.value)}
+                className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-nors-teal"
+              >
+                <option value="">Selecionar...</option>
+                {TIPO_SERVICO_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Unidade</label>
+              <select
+                value={unidade}
+                onChange={(e) => setUnidade(e.target.value)}
+                className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-nors-teal"
+              >
+                <option value="">Selecionar...</option>
+                {UNIDADE_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Observações</label>
+              <textarea
+                value={observacoes}
+                onChange={(e) => setObservacoes(e.target.value)}
+                rows={3}
+                placeholder="Alguma nota sobre a viatura ou o serviço (opcional)"
+                className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-nors-teal"
+              />
+            </div>
+
+            <button
+              onClick={handleSubmitEntrada}
+              disabled={!formValid || isSubmitting}
+              className="mt-6 rounded-md px-6 py-2 w-full text-white disabled:opacity-50 transition-opacity flex items-center justify-center gap-2"
+              style={{ backgroundColor: '#415A67' }}
+            >
+              {isSubmitting && <Loader2 className="animate-spin" size={16} />}
+              {isSubmitting ? 'A registar...' : 'Confirmar Entrada'}
+            </button>
+          </div>
+        )}
+
+        {/* Success state */}
+        {successData && (
+          <div className="mt-6 bg-white rounded-xl shadow-sm p-8 text-center">
+            <CheckCircle2 size={48} style={{ color: '#415A67' }} className="mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-nors-off-black mb-2">Entrada registada com sucesso</h3>
+            <p className="text-nors-off-black font-medium mb-3">
+              {successData.matricula} — {successData.tipo_servico} — {successData.unidade}
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              O Suporte ao Negócio foi notificado. Após abertura da OS no SAP, envie o número da OS por Teams, email ou WhatsApp.
+            </p>
+            <button
+              onClick={resetAll}
+              className="rounded-md px-6 py-2 text-white hover:opacity-90 transition-opacity"
+              style={{ backgroundColor: '#415A67' }}
+            >
+              Nova Pesquisa
+            </button>
+          </div>
         )}
 
         {!isLoading && hasSearched && !bestContract && vehicleFallback && (
@@ -116,7 +294,7 @@ export default function ReceptionPortal() {
           <VehicleNotFoundCard />
         )}
 
-        {lastSearchTime && !isLoading && (
+        {lastSearchTime && !isLoading && !successData && (
           <p className="text-xs text-nors-light-gray-2 text-center mt-4">
             Última consulta: {lastSearchTime.toLocaleTimeString('pt-PT')}
           </p>
