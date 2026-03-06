@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, RefreshCw, Pencil, X, Save } from 'lucide-react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { getViatura, updateViatura } from '@/services/vehicles'
 import { getOSByViatura } from '@/services/service-orders'
+import { supabase } from '@/lib/supabase'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { formatNumber, formatDate, formatHorasMotor, formatHorasMotorCompleto, formatKZ } from '@/utils/formatters'
 import { TIPOS_REVISAO, MARCAS, MODELOS_POR_MARCA } from '@/utils/constants'
@@ -26,6 +28,49 @@ export default function VehicleDetail() {
     queryFn: () => getOSByViatura(id!),
     enabled: !!id,
   })
+
+  const { data: kmHistory } = useQuery({
+    queryKey: ['km-history', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('ordens_servico')
+        .select('id, numero_os, data_os, tipo_revisao, km_na_revisao')
+        .eq('viatura_id', id!)
+        .not('km_na_revisao', 'is', null)
+        .order('data_os', { ascending: true })
+      if (error) throw error
+      return data || []
+    },
+    enabled: !!id,
+  })
+
+  const { data: apvContract } = useQuery({
+    queryKey: ['apv-km-target', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('contratos')
+        .select('km_anuais')
+        .eq('viatura_id', id!)
+        .eq('tipo_contrato', 'APV')
+        .eq('status_contrato', 'ACTIVO')
+        .maybeSingle()
+      if (error) throw error
+      return data
+    },
+    enabled: !!id,
+  })
+
+  const kmMetrics = useMemo(() => {
+    if (!kmHistory || kmHistory.length < 2) return null
+    const last = kmHistory[kmHistory.length - 1]
+    const prev = kmHistory[kmHistory.length - 2]
+    const daysBetween = (new Date(last.data_os).getTime() - new Date(prev.data_os).getTime()) / (1000 * 60 * 60 * 24)
+    if (daysBetween <= 0) return null
+    const ritmoActual = ((last.km_na_revisao! - prev.km_na_revisao!) / daysBetween) * 30
+    return { ritmoActual }
+  }, [kmHistory])
+
+  const kmContratadoMensal = apvContract?.km_anuais ? apvContract.km_anuais / 12 : null
 
   const [editMatricula, setEditMatricula] = useState('')
   const [editMarca, setEditMarca] = useState('')
@@ -205,6 +250,89 @@ export default function VehicleDetail() {
           </div>
         </div>
       </div>
+
+      {kmHistory && kmHistory.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-gray-900">Quilometragem</h2>
+
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={kmHistory}>
+                <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
+                <XAxis dataKey="data_os" tickFormatter={(v) => formatDate(v)} tick={{ fontSize: 11 }} />
+                <YAxis tickFormatter={(v) => formatNumber(v)} tick={{ fontSize: 11 }} />
+                <Tooltip
+                  formatter={(value: number) => [formatNumber(value) + ' km', 'KM']}
+                  labelFormatter={(label) => formatDate(label)}
+                />
+                <Line type="monotone" dataKey="km_na_revisao" stroke="#415A67" strokeWidth={2} dot={{ fill: '#415A67', r: 4 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="flex gap-4">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 flex-1">
+              <p className="text-xs text-gray-500 mb-1">Ritmo Actual</p>
+              <p className="text-lg font-semibold">
+                {kmMetrics ? formatNumber(Math.round(kmMetrics.ritmoActual)) + ' km/mês' : <span className="text-gray-400">—</span>}
+              </p>
+            </div>
+            {kmContratadoMensal !== null && (
+              <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 flex-1">
+                <p className="text-xs text-gray-500 mb-1">KM Contratado</p>
+                <p className="text-lg font-semibold">{formatNumber(Math.round(kmContratadoMensal))} km/mês</p>
+              </div>
+            )}
+            {kmContratadoMensal !== null && (
+              <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 flex-1">
+                <p className="text-xs text-gray-500 mb-1">Estado</p>
+                {!kmMetrics ? (
+                  <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-gray-100 text-gray-500 border-gray-200">Dados insuficientes</span>
+                ) : kmMetrics.ritmoActual <= kmContratadoMensal ? (
+                  <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-emerald-100 text-emerald-700 border-emerald-200">Dentro do previsto</span>
+                ) : kmMetrics.ritmoActual <= kmContratadoMensal * 1.15 ? (
+                  <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-amber-100 text-amber-700 border-amber-200">Atenção</span>
+                ) : (
+                  <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-red-100 text-red-700 border-red-200">Acima do contrato</span>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50/50 text-xs font-medium uppercase tracking-wider text-gray-500">
+                  <th className="text-left px-4 py-3">Data</th>
+                  <th className="text-left px-4 py-3">Nº OS</th>
+                  <th className="text-left px-4 py-3">Tipo Revisão</th>
+                  <th className="text-right px-4 py-3">KM</th>
+                  <th className="text-right px-4 py-3">Variação</th>
+                  <th className="text-right px-4 py-3">Dias desde anterior</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {[...kmHistory].reverse().map((os, idx) => {
+                  const reverseIdx = kmHistory.length - 1 - idx
+                  const prev = reverseIdx > 0 ? kmHistory[reverseIdx - 1] : null
+                  const variacao = prev ? os.km_na_revisao! - prev.km_na_revisao! : null
+                  const dias = prev ? Math.round((new Date(os.data_os).getTime() - new Date(prev.data_os).getTime()) / (1000 * 60 * 60 * 24)) : null
+                  return (
+                    <tr key={os.id} className="hover:bg-gray-50/50">
+                      <td className="px-4 py-2.5 text-xs">{formatDate(os.data_os)}</td>
+                      <td className="px-4 py-2.5 text-xs font-mono">{os.numero_os}</td>
+                      <td className="px-4 py-2.5 text-xs">{os.tipo_revisao}</td>
+                      <td className="px-4 py-2.5 text-xs text-right">{formatNumber(os.km_na_revisao)}</td>
+                      <td className="px-4 py-2.5 text-xs text-right">{variacao !== null ? `+${formatNumber(variacao)} km` : '—'}</td>
+                      <td className="px-4 py-2.5 text-xs text-right">{dias !== null ? dias : '—'}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
