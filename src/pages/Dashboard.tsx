@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import {
   FileText, DollarSign, AlertTriangle, Users, Truck,
-  RefreshCw, Plus, Clock, CheckCircle, XCircle, ChevronRight, ArrowRight,
+  RefreshCw, Plus, Clock, CheckCircle, XCircle, ChevronRight, ArrowRight, Loader2,
 } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { getKPIs, getAlertas, getEstadoContratos } from '@/services/dashboard'
@@ -13,6 +13,7 @@ import { KPICard } from '@/components/shared/KPICard'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { ProposalModal } from '@/components/shared/ProposalModal'
 import { formatUSD, formatKZ, formatDate, formatNumber } from '@/utils/formatters'
+import { generateMonthlyReport } from '@/services/report'
 import type { EstadoContrato } from '@/types'
 
 const STATUS_COLORS: Record<string, string> = {
@@ -36,6 +37,7 @@ const CHART_TEAL = '#415A67'
 export default function Dashboard() {
   const [proposalContrato, setProposalContrato] = useState<EstadoContrato | null>(null)
   const [donutFilter, setDonutFilter] = useState<'APV' | 'CM' | 'Todos'>('APV')
+  const [generatingReport, setGeneratingReport] = useState(false)
 
   const { data: kpis, isLoading: loadingKPIs } = useQuery({
     queryKey: ['dashboard-kpis'],
@@ -178,6 +180,16 @@ export default function Dashboard() {
       .slice(0, 5)
   }, [contratos])
 
+  const handleGenerateReport = useCallback(() => {
+    if (!kpis || !contratos || !alertas) return
+    setGeneratingReport(true)
+    try {
+      generateMonthlyReport({ kpis, contratos, alertas, config: config ?? null })
+    } finally {
+      setGeneratingReport(false)
+    }
+  }, [kpis, contratos, alertas, config])
+
   if (loadingKPIs) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -209,6 +221,14 @@ export default function Dashboard() {
             </div>
           )}
           <div className="flex gap-2">
+            <button
+              onClick={handleGenerateReport}
+              disabled={generatingReport || !kpis || !contratos}
+              className="inline-flex items-center gap-1.5 bg-white text-gray-700 h-10 px-4 rounded-md text-sm font-medium border border-gray-200 hover:bg-gray-50 disabled:opacity-50"
+            >
+              {generatingReport ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
+              {generatingReport ? 'A gerar...' : 'Relatório'}
+            </button>
             <Link to="/contratos/novo" className="inline-flex items-center gap-1.5 bg-nors-teal text-white h-10 px-4 rounded-md text-sm font-medium hover:opacity-90">
               <Plus size={14} /> Contrato
             </Link>
