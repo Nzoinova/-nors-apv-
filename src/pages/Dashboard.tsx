@@ -14,6 +14,7 @@ import { StatusBadge } from '@/components/shared/StatusBadge'
 import { ProposalModal } from '@/components/shared/ProposalModal'
 import { formatUSD, formatKZ, formatDate, formatNumber } from '@/utils/formatters'
 import { generateMonthlyReport } from '@/services/report'
+import { getEntradasHoje } from '@/services/entradas'
 import type { EstadoContrato } from '@/types'
 
 const STATUS_COLORS: Record<string, string> = {
@@ -57,6 +58,13 @@ export default function Dashboard() {
   const { data: config } = useQuery({
     queryKey: ['config'],
     queryFn: getConfig,
+  })
+
+  const { data: entradasHoje = [] } = useQuery({
+    queryKey: ['entradas-hoje'],
+    queryFn: getEntradasHoje,
+    staleTime: 1000 * 60 * 2,
+    refetchInterval: 1000 * 60 * 5,
   })
 
   const cmCandidates = useMemo(() => {
@@ -566,6 +574,66 @@ export default function Dashboard() {
               <div className="h-40 flex items-center justify-center text-xs text-gray-400 font-light">Sem contratos próximos ao vencimento</div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Entradas Hoje */}
+      <div className="grid grid-cols-12 gap-4">
+        <div className="col-span-12 bg-white rounded-lg border border-gray-200 shadow-sm p-5">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Entradas Hoje</h3>
+              <p className="text-sm text-gray-500">{entradasHoje.length} viatura(s) registada(s)</p>
+            </div>
+            <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${entradasHoje.length > 0 ? 'bg-nors-teal text-white' : 'bg-gray-100 text-gray-500'}`}>
+              {entradasHoje.length}
+            </span>
+          </div>
+          {entradasHoje.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8">
+              <Truck size={32} color="#ABABAB" />
+              <p className="text-sm text-gray-400 mt-2">Sem entradas registadas hoje</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50/50">
+                    <th className="text-left text-xs uppercase text-gray-500 tracking-wide px-3 py-2">Hora</th>
+                    <th className="text-left text-xs uppercase text-gray-500 tracking-wide px-3 py-2">Matrícula</th>
+                    <th className="text-left text-xs uppercase text-gray-500 tracking-wide px-3 py-2">Cliente</th>
+                    <th className="text-left text-xs uppercase text-gray-500 tracking-wide px-3 py-2">Serviço</th>
+                    <th className="text-left text-xs uppercase text-gray-500 tracking-wide px-3 py-2">Unidade</th>
+                    <th className="text-right text-xs uppercase text-gray-500 tracking-wide px-3 py-2">KM Entrada</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {entradasHoje.map((entrada: any) => (
+                    <tr key={entrada.id} className="hover:bg-gray-50/50 border-b border-gray-100">
+                      <td className="px-3 py-2 text-sm text-gray-600">
+                        {new Date(entrada.data_entrada).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
+                      </td>
+                      <td className="px-3 py-2 text-sm font-medium text-gray-900">{entrada.matricula}</td>
+                      <td className="px-3 py-2 text-sm text-gray-600">{entrada.cliente_nome}</td>
+                      <td className="px-3 py-2">
+                        {['B1', 'B2', 'B3', 'B4'].includes(entrada.tipo_servico) ? (
+                          <span className="bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2.5 py-0.5 text-xs font-semibold">
+                            {entrada.tipo_servico}
+                          </span>
+                        ) : (
+                          <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold" style={{ backgroundColor: 'rgba(65,90,103,0.1)', color: '#415A67', border: '1px solid rgba(65,90,103,0.2)' }}>
+                            {entrada.tipo_servico}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2 text-sm text-gray-500">{entrada.unidade}</td>
+                      <td className="px-3 py-2 text-sm text-gray-600 text-right">{formatNumber(entrada.km_entrada)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
 
