@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Save } from 'lucide-react'
 import { getClientes } from '@/services/clients'
 import { createViatura } from '@/services/vehicles'
-import { MARCAS } from '@/utils/constants'
+import { MARCAS, MODELOS_POR_MARCA } from '@/utils/constants'
 
 export default function VehicleForm() {
   const navigate = useNavigate()
@@ -18,6 +18,7 @@ export default function VehicleForm() {
   const [ano, setAno] = useState('')
   const [kmInicial, setKmInicial] = useState('')
   const [horasMotor, setHorasMotor] = useState('')
+  const [modeloCustom, setModeloCustom] = useState(false)
 
   const { data: clientes } = useQuery({
     queryKey: ['clientes'],
@@ -110,7 +111,7 @@ export default function VehicleForm() {
             </label>
             <select
               value={marca}
-              onChange={(e) => setMarca(e.target.value)}
+              onChange={(e) => { setMarca(e.target.value); setModelo(''); setModeloCustom(false) }}
               className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
             >
               {MARCAS.map(m => (
@@ -122,13 +123,34 @@ export default function VehicleForm() {
             <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
               Modelo
             </label>
-            <input
-              type="text"
-              value={modelo}
-              onChange={(e) => setModelo(e.target.value)}
-              placeholder="Opcional"
-              className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
-            />
+            {MODELOS_POR_MARCA[marca] && !modeloCustom ? (
+              <select
+                value={modelo}
+                onChange={(e) => {
+                  if (e.target.value === '__outro__') {
+                    setModelo('')
+                    setModeloCustom(true)
+                  } else {
+                    setModelo(e.target.value)
+                  }
+                }}
+                className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
+              >
+                <option value="">Seleccionar modelo...</option>
+                {MODELOS_POR_MARCA[marca].map(m => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+                <option value="__outro__">Outro...</option>
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={modelo}
+                onChange={(e) => setModelo(e.target.value)}
+                placeholder="Opcional"
+                className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
+              />
+            )}
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">

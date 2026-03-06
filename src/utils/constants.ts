@@ -22,6 +22,11 @@ export const OS_PREFIXES: Record<string, Record<string, string>> = {
 
 export const MARCAS = ['Dongfeng', 'Volvo', 'SDMO', 'Rekohl'] as const
 
+export const MODELOS_POR_MARCA: Record<string, string[]> = {
+  Dongfeng: ['KX 560', 'KL 465', 'KC 450', 'KC 385', 'KL 450', 'KR 220', 'KR 190', 'Captan 125'],
+  Volvo: ['FMX 440', 'FMX 480', 'FH 460', 'FH 520', 'FH 540', 'FL 240', 'FL 280', 'FL 420', 'FM 380'],
+}
+
 export const STATUS_CONTRATO_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   ATIVO: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border border-emerald-200' },
   'A RENOVAR': { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border border-amber-200' },

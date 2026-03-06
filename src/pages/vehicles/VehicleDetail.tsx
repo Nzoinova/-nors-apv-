@@ -6,7 +6,7 @@ import { getViatura, updateViatura } from '@/services/vehicles'
 import { getOSByViatura } from '@/services/service-orders'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { formatNumber, formatDate, formatHorasMotor, formatHorasMotorCompleto, formatKZ } from '@/utils/formatters'
-import { TIPOS_REVISAO, MARCAS } from '@/utils/constants'
+import { TIPOS_REVISAO, MARCAS, MODELOS_POR_MARCA } from '@/utils/constants'
 
 export default function VehicleDetail() {
   const { id } = useParams<{ id: string }>()
@@ -33,6 +33,7 @@ export default function VehicleDetail() {
   const [editAno, setEditAno] = useState('')
   const [editKmInicial, setEditKmInicial] = useState('')
   const [editHorasMotor, setEditHorasMotor] = useState('')
+  const [editModeloCustom, setEditModeloCustom] = useState(false)
 
   function startEdit() {
     if (!viatura) return
@@ -42,6 +43,8 @@ export default function VehicleDetail() {
     setEditAno(viatura.ano?.toString() || '')
     setEditKmInicial(viatura.km_inicial?.toString() || '')
     setEditHorasMotor(viatura.horas_motor_segundos?.toString() || '')
+    const modelos = MODELOS_POR_MARCA[viatura.marca]
+    setEditModeloCustom(!modelos || !modelos.includes(viatura.modelo || ''))
     setEditing(true)
   }
 
@@ -138,11 +141,35 @@ export default function VehicleDetail() {
                 <Row label="VIN" value={viatura.vin} />
                 <div className="flex justify-between items-center gap-3">
                   <span className="text-gray-500 text-xs">Marca</span>
-                  <select value={editMarca} onChange={(e) => setEditMarca(e.target.value)} className="w-36 px-2 py-1 rounded border border-gray-200 focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20 text-xs focus:outline-none">
+                  <select value={editMarca} onChange={(e) => { setEditMarca(e.target.value); setEditModelo(''); setEditModeloCustom(false) }} className="w-36 px-2 py-1 rounded border border-gray-200 focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20 text-xs focus:outline-none">
                     {MARCAS.map(m => <option key={m} value={m}>{m}</option>)}
                   </select>
                 </div>
-                <EditRow label="Modelo" value={editModelo} onChange={setEditModelo} />
+                {MODELOS_POR_MARCA[editMarca] && !editModeloCustom ? (
+                  <div className="flex justify-between items-center gap-3">
+                    <span className="text-gray-500 text-xs whitespace-nowrap">Modelo</span>
+                    <select
+                      value={editModelo}
+                      onChange={(e) => {
+                        if (e.target.value === '__outro__') {
+                          setEditModelo('')
+                          setEditModeloCustom(true)
+                        } else {
+                          setEditModelo(e.target.value)
+                        }
+                      }}
+                      className="w-36 px-2 py-1 rounded border border-gray-200 focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20 text-xs focus:outline-none"
+                    >
+                      <option value="">Seleccionar...</option>
+                      {MODELOS_POR_MARCA[editMarca].map(m => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                      <option value="__outro__">Outro...</option>
+                    </select>
+                  </div>
+                ) : (
+                  <EditRow label="Modelo" value={editModelo} onChange={setEditModelo} />
+                )}
                 <EditRow label="Ano" value={editAno} onChange={setEditAno} type="number" />
               </>
             ) : (
