@@ -1,0 +1,46 @@
+/*
+  SUPABASE TABLE REQUIRED — run in SQL Editor before deploying:
+
+  CREATE TABLE entradas_viaturas (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    viatura_id UUID REFERENCES viaturas(id),
+    contrato_id UUID REFERENCES contratos(id),
+    matricula TEXT NOT NULL,
+    cliente_nome TEXT NOT NULL,
+    km_entrada INTEGER NOT NULL,
+    tipo_servico TEXT NOT NULL,
+    unidade TEXT NOT NULL,
+    observacoes TEXT,
+    data_entrada TIMESTAMPTZ NOT NULL,
+    registado_por TEXT NOT NULL DEFAULT 'Recepção',
+    created_at TIMESTAMPTZ DEFAULT now()
+  );
+*/
+
+import { supabase } from '@/lib/supabase'
+
+export interface NovaEntrada {
+  viatura_id: string
+  contrato_id: string
+  matricula: string
+  cliente_nome: string
+  km_entrada: number
+  tipo_servico: string
+  unidade: string
+  observacoes?: string
+  data_entrada: string
+  registado_por: string
+}
+
+export async function registarEntrada(entrada: NovaEntrada) {
+  const { data, error } = await supabase
+    .from('entradas_viaturas')
+    .insert([entrada])
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+// TODO: Dashboard alert for new entradas — query entradas_viaturas
+// WHERE data_entrada > now() - interval '24 hours' AND notificado = false
