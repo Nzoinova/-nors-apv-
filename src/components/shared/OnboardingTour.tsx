@@ -24,44 +24,75 @@ interface TourStep {
   body: string
   route?: string
   footerStats?: string
+  target: string | null
 }
 
 const TOUR_STEPS: TourStep[] = [
   {
     title: 'Sistema de Gestão APV',
     body: 'Bem-vindo ao sistema de gestão de contratos de manutenção da NORS Trucks and Buses Angola VT. Este tour mostra como o sistema te mantém sempre no controlo.',
+    target: null,
   },
   {
     title: 'Visão em tempo real',
     body: 'Os indicadores principais mostram contratos activos, receita mensal em USD e alertas pendentes — actualizados automaticamente.',
     route: '/',
+    target: 'kpi-cards',
   },
   {
     title: 'Alertas automáticos',
     body: 'O sistema alerta quando um contrato APV está a 30 ou 60 dias de expirar, quando uma revisão está atrasada e quando há oportunidades CM→APV. Nunca perdes um prazo.',
+    target: 'alertas-banner',
   },
   {
     title: 'Gestão de contratos',
     body: 'Todos os contratos organizados por cliente. Filtra por estado, tipo ou cliente. O pipeline mostra contratos CM prontos para proposta APV.',
     route: '/contratos',
+    target: null,
   },
   {
     title: 'Frota e quilometragem',
     body: 'Cada viatura tem o seu histórico de quilometragem. O sistema compara o ritmo actual com o contratado e alerta quando está acima do previsto.',
     route: '/viaturas',
+    target: null,
   },
   {
     title: 'Portal de Recepção',
     body: 'A equipa de recepção tem acesso a um portal dedicado para verificar contratos e registar entradas de viaturas. As entradas aparecem no Dashboard em tempo real.',
     route: '/',
+    target: null,
   },
   {
     title: 'Relatório mensal',
     body: 'Com um clique geras o relatório mensal completo — KPIs, contratos a renovar, clientes e alertas — pronto para reunião de gestão.',
     route: '/',
     footerStats: 'Sistema activo · 14 contratos APV · 12 clientes · 51 viaturas',
+    target: 'relatorio-btn',
   },
 ]
+
+function getCardPosition(dataAttr: string | null): { top: number; left: number } {
+  if (!dataAttr) return { top: window.innerHeight * 0.6, left: window.innerWidth / 2 - 210 }
+
+  const el = document.querySelector(`[data-tour="${dataAttr}"]`)
+  if (!el) return { top: window.innerHeight * 0.6, left: window.innerWidth / 2 - 210 }
+
+  const rect = el.getBoundingClientRect()
+  const cardWidth = 420
+  const cardHeight = 220
+  const padding = 16
+
+  const placement = rect.bottom < window.innerHeight / 2 ? 'below' : 'above'
+
+  const top = placement === 'below'
+    ? rect.bottom + padding
+    : rect.top - cardHeight - padding
+
+  let left = rect.left + rect.width / 2 - cardWidth / 2
+  left = Math.max(16, Math.min(left, window.innerWidth - cardWidth - 16))
+
+  return { top, left }
+}
 
 export function TourProvider({ children }: { children: React.ReactNode }) {
   const [isTourActive, setIsTourActive] = useState(false)
@@ -89,7 +120,13 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
         <TourOverlay
           currentStep={activeStep}
           setCurrentStep={setActiveStep}
+          isTourActive={isTourActive}
           onClose={() => {
+            document.querySelectorAll('[data-tour-active]').forEach(el => {
+              (el as HTMLElement).style.outline = ''
+              ;(el as HTMLElement).style.outlineOffset = ''
+              el.removeAttribute('data-tour-active')
+            })
             setIsTourActive(false)
             localStorage.setItem(STORAGE_KEY, 'true')
           }}
@@ -102,16 +139,19 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
 function TourOverlay({
   currentStep,
   setCurrentStep,
+  isTourActive,
   onClose,
 }: {
   currentStep: number
   setCurrentStep: (step: number) => void
+  isTourActive: boolean
   onClose: () => void
 }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [visible, setVisible] = useState(false)
   const [cardVisible, setCardVisible] = useState(false)
+  const [cardPos, setCardPos] = useState({ top: 0, left: 0 })
 
   const step = TOUR_STEPS[currentStep]
   const total = TOUR_STEPS.length
@@ -135,6 +175,38 @@ function TourOverlay({
     }
   }, [currentStep, step.route, navigate, location.pathname])
 
+  // Position card near target element
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const pos = getCardPosition(TOUR_STEPS[currentStep].target)
+      setCardPos({ top: pos.top, left: pos.left })
+    }, 450)
+    return () => clearTimeout(timer)
+  }, [currentStep])
+
+  // Spotlight highlight effect
+  useEffect(() => {
+    const prev = document.querySelector('[data-tour-active]')
+    if (prev) {
+      (prev as HTMLElement).style.outline = ''
+      ;(prev as HTMLElement).style.outlineOffset = ''
+      prev.removeAttribute('data-tour-active')
+    }
+
+    const target = TOUR_STEPS[currentStep]?.target
+    if (target && isTourActive) {
+      const timer = setTimeout(() => {
+        const el = document.querySelector(`[data-tour="${target}"]`) as HTMLElement
+        if (el) {
+          el.style.outline = '2px solid #415A67'
+          el.style.outlineOffset = '4px'
+          el.setAttribute('data-tour-active', 'true')
+        }
+      }, 450)
+      return () => clearTimeout(timer)
+    }
+  }, [currentStep, isTourActive])
+
   const goNext = () => {
     if (currentStep < total - 1) {
       setCardVisible(false)
@@ -153,7 +225,7 @@ function TourOverlay({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center pb-[10vh]"
+      className="fixed inset-0 z-50"
       style={{
         backgroundColor: 'rgba(0,0,0,0.4)',
         backdropFilter: 'blur(4px)',
@@ -165,11 +237,15 @@ function TourOverlay({
       }}
     >
       <div
-        className="max-w-md w-full mx-4 bg-white rounded-2xl shadow-2xl p-6"
+        className="bg-white rounded-2xl shadow-2xl p-6"
         style={{
-          transform: cardVisible ? 'translateY(0)' : 'translateY(20px)',
+          position: 'fixed',
+          top: `${cardPos.top}px`,
+          left: `${cardPos.left}px`,
+          width: '420px',
+          zIndex: 9999,
           opacity: cardVisible ? 1 : 0,
-          transition: 'transform 300ms ease, opacity 300ms ease',
+          transition: 'top 350ms ease, left 350ms ease, opacity 200ms ease',
         }}
       >
         {/* Header */}
