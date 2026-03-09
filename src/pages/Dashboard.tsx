@@ -242,6 +242,7 @@ export default function Dashboard() {
               onClick={handleGenerateReport}
               disabled={generatingReport || !kpis || !contratos}
               className="inline-flex items-center gap-1.5 bg-white text-gray-700 h-10 px-4 rounded-md text-sm font-medium border border-gray-200 hover:bg-gray-50 disabled:opacity-50"
+              data-tour="relatorio-btn"
             >
               {generatingReport ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
               {generatingReport ? 'A gerar...' : 'Relatório'}
@@ -261,7 +262,7 @@ export default function Dashboard() {
 
       {/* KPI Cards */}
       {kpis && (
-        <div className="grid grid-cols-6 gap-3">
+        <div className="grid grid-cols-6 gap-3" data-tour="kpi-cards">
           <KPICard title="Contratos Activos" value={kpis.contratos_ativos} subtitle={`${kpis.total_contratos} total`} icon={CheckCircle} accent />
           <KPICard title="A Renovar" value={kpis.contratos_a_renovar} subtitle="Próx. 60 dias" icon={Clock} />
           <KPICard title="Expirados" value={kpis.contratos_expirados} subtitle="Acção necessária" icon={XCircle} />
@@ -588,7 +589,7 @@ export default function Dashboard() {
 
       {/* Entradas Hoje */}
       <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-12 bg-white rounded-lg border border-gray-200 shadow-sm p-5">
+        <div className="col-span-12 bg-white rounded-lg border border-gray-200 shadow-sm p-5" data-tour="entradas-hoje">
           <div className="flex justify-between items-center mb-4">
             <div>
               <h3 className="text-lg font-semibold text-gray-900">Entradas Hoje</h3>
