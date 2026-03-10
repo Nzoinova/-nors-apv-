@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, RefreshCw, Search, ChevronDown, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, SlidersHorizontal, Trash2 } from 'lucide-react'
 import { getEstadoContratos } from '@/services/dashboard'
@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { formatUSD, formatKZ, formatDate } from '@/utils/formatters'
-import type { EstadoContrato, PipelineItem } from '@/types'
+import type { EstadoContrato } from '@/types'
 
 type SortKey = 'matricula' | 'marca' | 'data_validade' | 'valor_mensal_usd' | 'dias_ate_expiracao'
 type SortDir = 'asc' | 'desc'
@@ -58,23 +58,32 @@ export default function ContractsList() {
   })
 
   const queryClient = useQueryClient()
-  const [deleteTarget, setDeleteTarget] = useState<PipelineItem | null>(null)
+  const [deletingPipelineId, setDeletingPipelineId] = useState<string | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  const deleteDraft = useMutation({
-    mutationFn: async (id: string) => {
+  const handleDeleteDraftClick = (contratoId: string) => {
+    setDeletingPipelineId(contratoId)
+    setShowDeleteConfirm(true)
+  }
+
+  const handleDeleteDraftConfirm = async () => {
+    if (!deletingPipelineId) return
+    try {
       const { error } = await supabase
         .from('contratos')
         .delete()
-        .eq('id', id)
+        .eq('id', deletingPipelineId)
         .eq('status_pipeline', 'PENDENTE_PROPOSTA')
       if (error) throw error
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contratos'] })
+      queryClient.invalidateQueries({ queryKey: ['estado-contratos'] })
       queryClient.invalidateQueries({ queryKey: ['pipeline'] })
-      setDeleteTarget(null)
-    },
-  })
+    } catch (err) {
+      console.error('Erro ao eliminar draft:', err)
+    } finally {
+      setDeletingPipelineId(null)
+      setShowDeleteConfirm(false)
+    }
+  }
 
   // Status options depend on tipo filter
   const statusOptions = useMemo(() => {
@@ -405,7 +414,7 @@ export default function ContractsList() {
                         <td className="px-2 py-3 text-center">
                           {p.status_pipeline === 'PENDENTE_PROPOSTA' && (
                             <button
-                              onClick={() => setDeleteTarget(p)}
+                              onClick={() => handleDeleteDraftClick(p.contrato_id)}
                               title="Eliminar draft"
                               className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer p-1 rounded"
                             >
@@ -522,13 +531,13 @@ export default function ContractsList() {
       )}
 
       <ConfirmDialog
-        open={deleteTarget !== null}
+        open={showDeleteConfirm}
         title="Eliminar draft de proposta?"
         message="Este draft será eliminado permanentemente. O contrato CM de origem não será afectado."
         confirmLabel="Eliminar"
         variant="danger"
-        onConfirm={() => { if (deleteTarget) deleteDraft.mutate(deleteTarget.contrato_id) }}
-        onCancel={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteDraftConfirm}
+        onCancel={() => { setShowDeleteConfirm(false); setDeletingPipelineId(null) }}
       />
     </div>
   )
