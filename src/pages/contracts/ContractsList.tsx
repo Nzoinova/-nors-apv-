@@ -67,18 +67,36 @@ export default function ContractsList() {
   }
 
   const handleDeleteDraftConfirm = async () => {
-    if (!deletingPipelineId) return
+    console.log('DELETE TRIGGERED — id:', deletingPipelineId)
+    if (!deletingPipelineId) {
+      console.log('ABORT — deletingPipelineId is null')
+      return
+    }
     try {
-      const { error } = await supabase
+      // Step 2: verify the row exists and is readable
+      const { data: check } = await supabase
+        .from('contratos')
+        .select('id, status_pipeline')
+        .eq('id', deletingPipelineId)
+      console.log('Row exists check:', check)
+
+      // Step 3: delete without status_pipeline guard to isolate the issue
+      console.log('Calling supabase delete...')
+      const { data, error } = await supabase
         .from('contratos')
         .delete()
         .eq('id', deletingPipelineId)
-        .eq('status_pipeline', 'PENDENTE_PROPOSTA')
+        .select()
+      console.log('Supabase response — data:', data, 'error:', error)
       if (error) throw error
+      // Invalidate ALL contract-related queries to be safe
+      queryClient.invalidateQueries({ queryKey: ['contratos'] })
       queryClient.invalidateQueries({ queryKey: ['estado-contratos'] })
       queryClient.invalidateQueries({ queryKey: ['pipeline'] })
+      queryClient.invalidateQueries({ queryKey: ['alertas'] })
+      console.log('Queries invalidated — done')
     } catch (err) {
-      console.error('Erro ao eliminar draft:', err)
+      console.error('DELETE ERROR:', err)
     } finally {
       setDeletingPipelineId(null)
       setShowDeleteConfirm(false)
