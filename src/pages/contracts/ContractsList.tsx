@@ -384,9 +384,9 @@ export default function ContractsList() {
                     const statusInfo = PIPELINE_STATUS_LABELS[p.status_pipeline] || { bg: 'bg-gray-100', text: 'text-gray-600', label: p.status_pipeline }
                     const daysSince = Math.floor((Date.now() - new Date(p.data_pipeline).getTime()) / (1000 * 60 * 60 * 24))
                     return (
-                      <tr key={p.contrato_id} className="border-b border-gray-100 hover:bg-gray-50/50">
+                      <tr key={p.id} className="border-b border-gray-100 hover:bg-gray-50/50">
                         <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                          <Link to={`/contratos/${p.contrato_id}`} className="text-nors-teal hover:underline">
+                          <Link to={`/contratos/${p.id}`} className="text-nors-teal hover:underline">
                             {p.cliente_nome?.split(' - ')[0] || '—'}
                           </Link>
                         </td>
@@ -409,7 +409,7 @@ export default function ContractsList() {
                         <td className="px-2 py-3 text-center">
                           {p.status_pipeline === 'PENDENTE_PROPOSTA' && (
                             <button
-                              onClick={() => handleDeleteDraft(p.contrato_id)}
+                              onClick={() => handleDeleteDraft(p.id)}
                               title="Eliminar draft"
                               className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer p-1 rounded"
                             >
