@@ -298,7 +298,7 @@ export default function Dashboard() {
           <KPICard title="Expirados" value={kpis.contratos_expirados} subtitle="Acção necessária" icon={XCircle} />
           <KPICard title="Receita Mensal" value={formatUSD(kpis.receita_mensal_usd)} subtitle={formatKZ(kpis.receita_mensal_kz)} icon={DollarSign} accent />
           <KPICard title="Clientes" value={kpis.total_clientes} subtitle={`${kpis.total_marcas} marca(s)`} icon={Users} />
-          <KPICard title="Alertas" value={alertasAlta.length} subtitle={`${allAlertas.length} total`} icon={AlertTriangle} />
+          <KPICard title="Alertas" value={allAlertas.length} subtitle={`${alertasAlta.length} alta prioridade`} icon={AlertTriangle} />
         </div>
       )}
 

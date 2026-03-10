@@ -13,7 +13,7 @@ export function KPICard({ title, value, subtitle, icon: Icon, accent }: KPICardP
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
       <div className="flex items-start justify-between">
         <div className="space-y-1 min-w-0 flex-1">
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-500 truncate">{title}</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-gray-500 whitespace-normal min-h-[2rem] leading-tight">{title}</p>
           <p className={`text-2xl font-bold tracking-tight ${accent ? 'text-nors-teal' : 'text-gray-900'}`}>
             {value}
           </p>
