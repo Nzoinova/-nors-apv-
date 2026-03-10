@@ -1,10 +1,12 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { Plus, RefreshCw, Search, ChevronDown, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, SlidersHorizontal } from 'lucide-react'
+import { Plus, RefreshCw, Search, ChevronDown, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, SlidersHorizontal, Trash2 } from 'lucide-react'
 import { getEstadoContratos } from '@/services/dashboard'
 import { getPipeline } from '@/services/pipeline'
+import { supabase } from '@/lib/supabase'
 import { StatusBadge } from '@/components/shared/StatusBadge'
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { formatUSD, formatKZ, formatDate } from '@/utils/formatters'
 import type { EstadoContrato, PipelineItem } from '@/types'
 
@@ -53,6 +55,25 @@ export default function ContractsList() {
   const { data: pipelineItems, isLoading: loadingPipeline } = useQuery({
     queryKey: ['pipeline'],
     queryFn: getPipeline,
+  })
+
+  const queryClient = useQueryClient()
+  const [deleteTarget, setDeleteTarget] = useState<PipelineItem | null>(null)
+
+  const deleteDraft = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('contratos')
+        .delete()
+        .eq('id', id)
+        .eq('status_pipeline', 'PENDENTE_PROPOSTA')
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contratos'] })
+      queryClient.invalidateQueries({ queryKey: ['pipeline'] })
+      setDeleteTarget(null)
+    },
   })
 
   // Status options depend on tipo filter
@@ -351,6 +372,7 @@ export default function ContractsList() {
                     <th className="text-center px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Status Pipeline</th>
                     <th className="text-center px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Criado</th>
                     <th className="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Origem CM</th>
+                    <th className="w-10"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -379,6 +401,17 @@ export default function ContractsList() {
                         <td className="px-4 py-3 text-sm text-gray-500">
                           {p.origem_validade ? `CM expirou ${formatDate(p.origem_validade)}` : '—'}
                           {p.origem_valor_kz != null && <span className="text-[10px] text-gray-400 ml-1">({formatKZ(p.origem_valor_kz)})</span>}
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          {p.status_pipeline === 'PENDENTE_PROPOSTA' && (
+                            <button
+                              onClick={() => setDeleteTarget(p)}
+                              title="Eliminar draft"
+                              className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer p-1 rounded"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
                         </td>
                       </tr>
                     )
@@ -487,6 +520,16 @@ export default function ContractsList() {
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Eliminar draft de proposta?"
+        message="Este draft será eliminado permanentemente. O contrato CM de origem não será afectado."
+        confirmLabel="Eliminar"
+        variant="danger"
+        onConfirm={() => { if (deleteTarget) deleteDraft.mutate(deleteTarget.contrato_id) }}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }
