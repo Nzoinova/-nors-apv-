@@ -134,8 +134,9 @@ export default function ServiceOrderForm() {
             <input type="number" value={kmRevisao} onChange={(e) => setKmRevisao(e.target.value)} placeholder="Ex: 45000" required className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20" />
           </div>
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Horas Motor (segundos)</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Horas Motor</label>
             <input type="number" value={horasMotor} onChange={(e) => setHorasMotor(e.target.value)} placeholder="Ex: 17898426" className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20" />
+            <p className="text-xs text-gray-400 mt-1">Introduzir em segundos — ex: 22 154 400 (= 6 154 h)</p>
             {horasMotorHoras !== null && <p className="text-[10px] text-nors-teal mt-1 font-semibold">= {horasMotorHoras.toLocaleString()} horas</p>}
           </div>
         </div>
