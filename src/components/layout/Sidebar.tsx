@@ -7,6 +7,7 @@ import {
   Wrench,
   Settings,
   AlertTriangle,
+  ChevronRight,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -22,9 +23,10 @@ interface SidebarProps {
   alertCount?: number
   totalAlerts?: number
   pipelineCount?: number
+  onAlertasClick?: () => void
 }
 
-export function Sidebar({ alertCount = 0, totalAlerts = 0, pipelineCount = 0 }: SidebarProps) {
+export function Sidebar({ alertCount = 0, totalAlerts = 0, pipelineCount = 0, onAlertasClick }: SidebarProps) {
   return (
     <aside className="fixed top-0 left-0 h-screen w-56 bg-nors-black flex flex-col z-30 shadow-lg">
       {/* Logo */}
@@ -41,10 +43,15 @@ export function Sidebar({ alertCount = 0, totalAlerts = 0, pipelineCount = 0 }: 
 
       {/* Alert Banner */}
       {alertCount > 0 ? (
-        <div className="mx-3 mb-4 rounded-md px-3 py-2" data-tour="alertas-banner" style={{ borderLeft: '3px solid #ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)' }}>
+        <button
+          onClick={onAlertasClick}
+          className="mx-3 mb-4 w-[calc(100%-1.5rem)] rounded-md px-3 py-2 text-left transition-colors hover:brightness-110"
+          data-tour="alertas-banner"
+          style={{ borderLeft: '3px solid #ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
+        >
           <div className="flex items-center gap-2">
             <AlertTriangle size={14} className="text-red-400 flex-shrink-0" />
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-[10px] font-semibold text-red-300">
                 {alertCount} alerta{alertCount > 1 ? 's' : ''} urgente{alertCount > 1 ? 's' : ''}
               </p>
@@ -54,19 +61,26 @@ export function Sidebar({ alertCount = 0, totalAlerts = 0, pipelineCount = 0 }: 
                 </p>
               )}
             </div>
+            <ChevronRight size={12} className="text-red-400/60 flex-shrink-0" />
           </div>
-        </div>
+        </button>
       ) : totalAlerts > 0 ? (
-        <div className="mx-3 mb-4 rounded-md px-3 py-2" data-tour="alertas-banner" style={{ borderLeft: '3px solid #415A67', backgroundColor: 'rgba(65, 90, 103, 0.15)' }}>
+        <button
+          onClick={onAlertasClick}
+          className="mx-3 mb-4 w-[calc(100%-1.5rem)] rounded-md px-3 py-2 text-left transition-colors hover:brightness-110"
+          data-tour="alertas-banner"
+          style={{ borderLeft: '3px solid #415A67', backgroundColor: 'rgba(65, 90, 103, 0.15)' }}
+        >
           <div className="flex items-center gap-2">
             <AlertTriangle size={14} className="flex-shrink-0" style={{ color: '#9CC7DE' }} />
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-[10px] font-semibold" style={{ color: '#9CC7DE' }}>
                 {totalAlerts} alerta{totalAlerts > 1 ? 's' : ''} activo{totalAlerts > 1 ? 's' : ''}
               </p>
             </div>
+            <ChevronRight size={12} className="flex-shrink-0" style={{ color: '#9CC7DE', opacity: 0.6 }} />
           </div>
-        </div>
+        </button>
       ) : null}
 
       {/* Navigation */}
