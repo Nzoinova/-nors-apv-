@@ -1,11 +1,55 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
-import { Search, CheckCircle, CheckCircle2, AlertTriangle, XCircle, Loader2 } from 'lucide-react'
+import { Search, CheckCircle, CheckCircle2, AlertTriangle, XCircle, Loader2, Lightbulb } from 'lucide-react'
 import { searchVehicleContract, type ReceptionSearchResult } from '@/services/reception'
 import { registarEntrada, type NovaEntrada } from '@/services/entradas'
 import { formatDate } from '@/utils/formatters'
+import { supabase } from '@/lib/supabase'
 import type { EstadoContrato } from '@/types'
 
 const UNIDADE_OPTIONS = ['Luanda (Icolo e Bengo)', 'Lobito', 'Lubango']
+
+function getSuggestedService(
+  osHistory: { tipo_revisao: string }[],
+  marca: string
+): { value: string; label: string; reason: string } | null {
+  const isDongfeng = marca === 'Dongfeng'
+  const cycle = isDongfeng
+    ? ['B1', 'B2', 'B3', 'B4', 'MC']
+    : ['B1', 'B2', 'B3', 'MC']
+
+  if (!osHistory || osHistory.length === 0) {
+    return {
+      value: 'B1',
+      label: 'B1 — Revisão Básica 1',
+      reason: 'Primeira intervenção registada',
+    }
+  }
+
+  const lastService = osHistory[0].tipo_revisao
+  const lastIndex = cycle.indexOf(lastService)
+
+  if (lastIndex === -1) return null
+
+  if (lastIndex === cycle.length - 1) {
+    return {
+      value: 'B1',
+      label: 'B1 — Revisão Básica 1',
+      reason: 'Último serviço foi MC — início de novo ciclo',
+    }
+  }
+
+  const nextService = cycle[lastIndex + 1]
+  const nextLabel =
+    nextService === 'MC'
+      ? 'MC — Manutenção Completa'
+      : `${nextService} — Revisão Básica ${nextService.slice(1)}`
+
+  return {
+    value: nextService,
+    label: nextLabel,
+    reason: `Último serviço registado: ${lastService}`,
+  }
+}
 
 export default function ReceptionPortal() {
   const [query, setQuery] = useState('')
@@ -24,6 +68,12 @@ export default function ReceptionPortal() {
   const [tipoServico, setTipoServico] = useState('')
   const [unidade, setUnidade] = useState('')
   const [observacoes, setObservacoes] = useState('')
+  const [suggestion, setSuggestion] = useState<{
+    value: string
+    label: string
+    reason: string
+  } | null>(null)
+  const [suggestionDismissed, setSuggestionDismissed] = useState(false)
 
   const resetRegistration = () => {
     setShowForm(false)
@@ -33,6 +83,7 @@ export default function ReceptionPortal() {
     setTipoServico('')
     setUnidade('')
     setObservacoes('')
+    setSuggestionDismissed(false)
   }
 
   const resetAll = () => {
@@ -40,6 +91,8 @@ export default function ReceptionPortal() {
     setResult(null)
     setHasSearched(false)
     setLastSearchTime(null)
+    setSuggestion(null)
+    setSuggestionDismissed(false)
     resetRegistration()
     inputRef.current?.focus()
   }
@@ -145,7 +198,42 @@ export default function ReceptionPortal() {
   // Reset tipo_servico when search result changes
   useEffect(() => {
     setTipoServico('')
+    setSuggestionDismissed(false)
   }, [result])
+
+  // Fetch OS history and compute suggestion when search result changes
+  useEffect(() => {
+    if (!bestContract?.viatura_id) {
+      setSuggestion(null)
+      return
+    }
+    const vehicleMarca = bestContract.marca
+    if (!vehicleMarca) {
+      setSuggestion(null)
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { data: osHistory } = await supabase
+          .from('ordens_servico')
+          .select('tipo_revisao, data, km_na_revisao')
+          .eq('viatura_id', bestContract.viatura_id)
+          .not('tipo_revisao', 'is', null)
+          .order('data', { ascending: false })
+          .limit(5)
+        if (cancelled) return
+        if (!osHistory) {
+          setSuggestion(null)
+          return
+        }
+        setSuggestion(getSuggestedService(osHistory as { tipo_revisao: string }[], vehicleMarca))
+      } catch {
+        if (!cancelled) setSuggestion(null)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [bestContract?.viatura_id, bestContract?.marca])
 
   return (
     <div className="min-h-screen bg-nors-off-white flex flex-col items-center">
@@ -228,9 +316,33 @@ export default function ReceptionPortal() {
 
             <div className="mt-6">
               <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Serviço</label>
+
+              {suggestion && !suggestionDismissed && (
+                <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 mb-2 flex items-start gap-2">
+                  <Lightbulb size={13} className="text-blue-500 mt-0.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs text-blue-700 font-medium">Sugestão: {suggestion.label}</span>
+                    <span className="text-xs text-blue-500 ml-1">{suggestion.reason}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTipoServico(suggestion.value)
+                      setSuggestionDismissed(true)
+                    }}
+                    className="text-xs font-medium text-nors-teal hover:underline cursor-pointer shrink-0 ml-auto"
+                  >
+                    Usar
+                  </button>
+                </div>
+              )}
+
               <select
                 value={tipoServico}
-                onChange={(e) => setTipoServico(e.target.value)}
+                onChange={(e) => {
+                  setTipoServico(e.target.value)
+                  if (e.target.value) setSuggestionDismissed(true)
+                }}
                 className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-nors-teal"
               >
                 <option value="">Selecionar...</option>
