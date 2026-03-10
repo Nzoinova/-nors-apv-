@@ -42,6 +42,25 @@ export async function registarEntrada(entrada: NovaEntrada) {
   return data
 }
 
+/*
+  If update returns 400, run in Supabase SQL Editor:
+  CREATE POLICY "Allow update entradas_viaturas"
+  ON entradas_viaturas FOR UPDATE USING (true);
+*/
+export async function updateEntrada(
+  id: string,
+  updates: { tipo_servico: string; km_entrada: number; observacoes?: string }
+) {
+  const { data, error } = await supabase
+    .from('entradas_viaturas')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
 export async function getEntradasHoje() {
   const hoje = new Date()
   hoje.setHours(0, 0, 0, 0)

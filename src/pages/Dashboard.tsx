@@ -1,9 +1,10 @@
 import { useState, useMemo, useCallback, useContext } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import {
   FileText, DollarSign, AlertTriangle, Users, Truck,
   RefreshCw, Plus, Clock, CheckCircle, XCircle, ChevronRight, ArrowRight, Loader2,
+  Pencil, Check, X,
 } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { getKPIs, getAlertas, getEstadoContratos } from '@/services/dashboard'
@@ -14,7 +15,7 @@ import { StatusBadge } from '@/components/shared/StatusBadge'
 import { ProposalModal } from '@/components/shared/ProposalModal'
 import { formatUSD, formatKZ, formatDate, formatNumber } from '@/utils/formatters'
 import { generateMonthlyReport } from '@/services/report'
-import { getEntradasHoje } from '@/services/entradas'
+import { getEntradasHoje, updateEntrada } from '@/services/entradas'
 import { TourContext } from '@/components/shared/OnboardingTour'
 import type { EstadoContrato } from '@/types'
 
@@ -38,9 +39,13 @@ const CHART_TEAL = '#415A67'
 
 export default function Dashboard() {
   const { startTour } = useContext(TourContext)
+  const queryClient = useQueryClient()
   const [proposalContrato, setProposalContrato] = useState<EstadoContrato | null>(null)
   const [donutFilter, setDonutFilter] = useState<'APV' | 'CM' | 'Todos'>('APV')
   const [generatingReport, setGeneratingReport] = useState(false)
+  const [editingEntradaId, setEditingEntradaId] = useState<string | null>(null)
+  const [editTipoServico, setEditTipoServico] = useState('')
+  const [editKmEntrada, setEditKmEntrada] = useState<number>(0)
 
   const { data: kpis, isLoading: loadingKPIs } = useQuery({
     queryKey: ['dashboard-kpis'],
@@ -199,6 +204,31 @@ export default function Dashboard() {
       setGeneratingReport(false)
     }
   }, [kpis, contratos, alertas, config])
+
+  const handleEditStart = (entrada: any) => {
+    setEditingEntradaId(entrada.id)
+    setEditTipoServico(entrada.tipo_servico)
+    setEditKmEntrada(entrada.km_entrada)
+  }
+
+  const handleEditSave = async () => {
+    if (!editingEntradaId) return
+    try {
+      await updateEntrada(editingEntradaId, {
+        tipo_servico: editTipoServico,
+        km_entrada: editKmEntrada,
+      })
+      queryClient.invalidateQueries({ queryKey: ['entradas-hoje'] })
+    } catch (err) {
+      console.error('Erro ao guardar:', err)
+    } finally {
+      setEditingEntradaId(null)
+    }
+  }
+
+  const handleEditCancel = () => {
+    setEditingEntradaId(null)
+  }
 
   if (loadingKPIs) {
     return (
@@ -615,31 +645,72 @@ export default function Dashboard() {
                     <th className="text-left text-xs uppercase text-gray-500 tracking-wide px-3 py-2">Serviço</th>
                     <th className="text-left text-xs uppercase text-gray-500 tracking-wide px-3 py-2">Unidade</th>
                     <th className="text-right text-xs uppercase text-gray-500 tracking-wide px-3 py-2">KM Entrada</th>
+                    <th className="text-right text-xs uppercase text-gray-500 tracking-wide px-3 py-2 w-10"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {entradasHoje.map((entrada: any) => (
-                    <tr key={entrada.id} className="hover:bg-gray-50/50 border-b border-gray-100">
-                      <td className="px-3 py-2 text-sm text-gray-600">
-                        {new Date(entrada.data_entrada).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
-                      </td>
-                      <td className="px-3 py-2 text-sm font-medium text-gray-900">{entrada.matricula}</td>
-                      <td className="px-3 py-2 text-sm text-gray-600">{entrada.cliente_nome}</td>
-                      <td className="px-3 py-2">
-                        {['B1', 'B2', 'B3', 'B4'].includes(entrada.tipo_servico) ? (
-                          <span className="bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2.5 py-0.5 text-xs font-semibold">
-                            {entrada.tipo_servico}
-                          </span>
-                        ) : (
-                          <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold" style={{ backgroundColor: 'rgba(65,90,103,0.1)', color: '#415A67', border: '1px solid rgba(65,90,103,0.2)' }}>
-                            {entrada.tipo_servico}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-sm text-gray-500">{entrada.unidade}</td>
-                      <td className="px-3 py-2 text-sm text-gray-600 text-right">{formatNumber(entrada.km_entrada)}</td>
-                    </tr>
-                  ))}
+                  {entradasHoje.map((entrada: any) => {
+                    const isEditing = editingEntradaId === entrada.id
+                    return (
+                      <tr key={entrada.id} className="hover:bg-gray-50/50 border-b border-gray-100">
+                        <td className="px-3 py-2 text-sm text-gray-600">
+                          {new Date(entrada.data_entrada).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
+                        </td>
+                        <td className="px-3 py-2 text-sm font-medium text-gray-900">{entrada.matricula}</td>
+                        <td className="px-3 py-2 text-sm text-gray-600">{entrada.cliente_nome}</td>
+                        <td className="px-3 py-2">
+                          {isEditing ? (
+                            <select
+                              value={editTipoServico}
+                              onChange={e => setEditTipoServico(e.target.value)}
+                              className="border border-gray-300 rounded px-2 py-1 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-nors-teal"
+                            >
+                              {['B1', 'B2', 'B3', 'B4', 'MC'].map(opt => (
+                                <option key={opt} value={opt}>{opt}</option>
+                              ))}
+                            </select>
+                          ) : ['B1', 'B2', 'B3', 'B4'].includes(entrada.tipo_servico) ? (
+                            <span className="bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2.5 py-0.5 text-xs font-semibold">
+                              {entrada.tipo_servico}
+                            </span>
+                          ) : (
+                            <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold" style={{ backgroundColor: 'rgba(65,90,103,0.1)', color: '#415A67', border: '1px solid rgba(65,90,103,0.2)' }}>
+                              {entrada.tipo_servico}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 text-sm text-gray-500">{entrada.unidade}</td>
+                        <td className="px-3 py-2 text-sm text-gray-600 text-right">
+                          {isEditing ? (
+                            <input
+                              type="number"
+                              value={editKmEntrada}
+                              onChange={e => setEditKmEntrada(Number(e.target.value))}
+                              className="border border-gray-300 rounded px-2 py-1 text-sm w-28"
+                            />
+                          ) : (
+                            formatNumber(entrada.km_entrada)
+                          )}
+                        </td>
+                        <td className="px-3 py-2 text-right">
+                          {isEditing ? (
+                            <div className="flex items-center justify-end gap-1">
+                              <button onClick={handleEditSave} className="text-emerald-600 hover:text-emerald-700 p-1 rounded transition-colors" title="Guardar">
+                                <Check size={14} />
+                              </button>
+                              <button onClick={handleEditCancel} className="text-gray-400 hover:text-gray-600 p-1 rounded transition-colors" title="Cancelar">
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ) : (
+                            <button onClick={() => handleEditStart(entrada)} className="text-gray-400 hover:text-nors-teal transition-colors cursor-pointer p-1 rounded" title="Editar entrada">
+                              <Pencil size={13} />
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
