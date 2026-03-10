@@ -12,9 +12,9 @@ interface ProposalModalProps {
 
 export function ProposalModal({ contrato, onClose }: ProposalModalProps) {
   const queryClient = useQueryClient()
-  const [kmActual, setKmActual] = useState(contrato.km_actual ?? contrato.km_inicial ?? 0)
-  const [horasMotor, setHorasMotor] = useState(
-    contrato.horas_motor_actual ?? contrato.horas_motor_segundos ?? 0
+  const [kmActual, setKmActual] = useState<number | ''>(contrato.km_actual ?? contrato.km_inicial ?? '')
+  const [horasMotor, setHorasMotor] = useState<number | ''>(
+    contrato.horas_motor_actual ?? contrato.horas_motor_segundos ?? ''
   )
   const [notas, setNotas] = useState('')
   const [toast, setToast] = useState(false)
@@ -28,8 +28,8 @@ export function ProposalModal({ contrato, onClose }: ProposalModalProps) {
         modelo: contrato.modelo,
         matricula: contrato.matricula,
         vin: contrato.vin,
-        km_inicial: kmActual,
-        horas_motor_segundos: horasMotor,
+        km_inicial: kmActual === '' ? null : Number(kmActual),
+        horas_motor_segundos: horasMotor === '' ? null : Number(horasMotor),
         origem_validade: contrato.data_validade,
         origem_valor_kz: contrato.valor_total_kz,
         notas_pipeline: notas || null,
@@ -98,7 +98,8 @@ export function ProposalModal({ contrato, onClose }: ProposalModalProps) {
                 <input
                   type="number"
                   value={kmActual}
-                  onChange={e => setKmActual(Number(e.target.value))}
+                  onChange={e => setKmActual(e.target.value === '' ? '' : Number(e.target.value))}
+                  placeholder="Opcional — ex: 167 000"
                   className="w-full h-10 px-3 rounded-md border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
                 />
               </div>
@@ -107,18 +108,19 @@ export function ProposalModal({ contrato, onClose }: ProposalModalProps) {
                 <input
                   type="number"
                   value={horasMotor}
-                  onChange={e => setHorasMotor(Number(e.target.value))}
+                  onChange={e => setHorasMotor(e.target.value === '' ? '' : Number(e.target.value))}
+                  placeholder="Opcional — ex: 4 971"
                   className="w-full h-10 px-3 rounded-md border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Notas para o Ricardo</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Observações</label>
               <textarea
                 value={notas}
                 onChange={e => setNotas(e.target.value)}
-                placeholder="Contexto adicional, urgência, preferências do cliente..."
+                placeholder="Contexto adicional, urgência, preferências do cliente... (opcional)"
                 className="w-full min-h-[100px] px-3 py-2 rounded-md border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20 resize-y"
               />
             </div>
