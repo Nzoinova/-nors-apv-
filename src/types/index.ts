@@ -158,7 +158,7 @@ export interface ResumoCliente {
 }
 
 export interface PipelineItem {
-  contrato_id: string
+  id: string
   cliente_id: string
   cliente_nome: string
   viatura_id: string
