@@ -123,8 +123,13 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
           isTourActive={isTourActive}
           onClose={() => {
             document.querySelectorAll('[data-tour-active]').forEach(el => {
-              (el as HTMLElement).style.outline = ''
-              ;(el as HTMLElement).style.outlineOffset = ''
+              const htmlEl = el as HTMLElement
+              htmlEl.style.boxShadow = ''
+              htmlEl.style.borderRadius = ''
+              htmlEl.style.position = ''
+              htmlEl.style.zIndex = ''
+              htmlEl.style.outline = ''
+              htmlEl.style.outlineOffset = ''
               el.removeAttribute('data-tour-active')
             })
             setIsTourActive(false)
@@ -134,6 +139,23 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
       )}
     </TourContext.Provider>
   )
+}
+
+// Steps that navigate to a new route (0-indexed)
+const NAVIGATION_STEPS = [3, 4]
+
+function clearHighlight() {
+  const prev = document.querySelector('[data-tour-active]')
+  if (prev) {
+    const el = prev as HTMLElement
+    el.style.boxShadow = ''
+    el.style.borderRadius = ''
+    el.style.position = ''
+    el.style.zIndex = ''
+    el.style.outline = ''
+    el.style.outlineOffset = ''
+    el.removeAttribute('data-tour-active')
+  }
 }
 
 function TourOverlay({
@@ -149,63 +171,51 @@ function TourOverlay({
 }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const [visible, setVisible] = useState(false)
   const [cardVisible, setCardVisible] = useState(false)
   const [cardPos, setCardPos] = useState({ top: 0, left: 0 })
 
   const step = TOUR_STEPS[currentStep]
   const total = TOUR_STEPS.length
+  const hasTarget = !!step.target
+  const delay = NAVIGATION_STEPS.includes(currentStep) ? 300 : 50
 
-  // Fade in overlay on mount
-  useEffect(() => {
-    requestAnimationFrame(() => setVisible(true))
-  }, [])
-
-  // Show card after route navigation settles
+  // Navigate + position card + highlight target
   useEffect(() => {
     setCardVisible(false)
+    clearHighlight()
+
     const targetRoute = step.route
-    if (targetRoute && location.pathname !== targetRoute) {
+    const needsNav = targetRoute && location.pathname !== targetRoute
+    if (needsNav) {
       navigate(targetRoute)
-      const timer = setTimeout(() => setCardVisible(true), 400)
-      return () => clearTimeout(timer)
-    } else {
-      const timer = setTimeout(() => setCardVisible(true), 50)
-      return () => clearTimeout(timer)
     }
-  }, [currentStep, step.route, navigate, location.pathname])
 
-  // Position card near target element
-  useEffect(() => {
+    const actualDelay = needsNav ? 300 : delay
+
     const timer = setTimeout(() => {
-      const pos = getCardPosition(TOUR_STEPS[currentStep].target)
-      setCardPos({ top: pos.top, left: pos.left })
-    }, 450)
-    return () => clearTimeout(timer)
-  }, [currentStep])
-
-  // Spotlight highlight effect
-  useEffect(() => {
-    const prev = document.querySelector('[data-tour-active]')
-    if (prev) {
-      (prev as HTMLElement).style.outline = ''
-      ;(prev as HTMLElement).style.outlineOffset = ''
-      prev.removeAttribute('data-tour-active')
-    }
-
-    const target = TOUR_STEPS[currentStep]?.target
-    if (target && isTourActive) {
-      const timer = setTimeout(() => {
+      // Highlight target element with box-shadow
+      const target = TOUR_STEPS[currentStep]?.target
+      if (target && isTourActive) {
         const el = document.querySelector(`[data-tour="${target}"]`) as HTMLElement
         if (el) {
-          el.style.outline = '2px solid #415A67'
-          el.style.outlineOffset = '4px'
+          el.style.boxShadow = '0 0 0 9999px rgba(0, 0, 0, 0.55)'
+          el.style.borderRadius = '8px'
+          el.style.position = 'relative'
+          el.style.zIndex = '9998'
           el.setAttribute('data-tour-active', 'true')
         }
-      }, 450)
-      return () => clearTimeout(timer)
-    }
-  }, [currentStep, isTourActive])
+      }
+
+      // Position card
+      const pos = getCardPosition(TOUR_STEPS[currentStep].target)
+      setCardPos({ top: pos.top, left: pos.left })
+
+      // Fade in card
+      setTimeout(() => setCardVisible(true), 100)
+    }, actualDelay)
+
+    return () => clearTimeout(timer)
+  }, [currentStep, step.route, step.target, navigate, location.pathname, isTourActive, delay])
 
   const goNext = () => {
     if (currentStep < total - 1) {
@@ -224,18 +234,20 @@ function TourOverlay({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50"
-      style={{
-        backgroundColor: 'rgba(0,0,0,0.4)',
-        backdropFilter: 'blur(4px)',
-        opacity: visible ? 1 : 0,
-        transition: 'opacity 300ms ease',
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose()
-      }}
-    >
+    <>
+      {/* Subtle overlay only for steps with no target element */}
+      {!hasTarget && (
+        <div
+          className="fixed inset-0"
+          style={{
+            backgroundColor: 'rgba(0,0,0,0.3)',
+            zIndex: 9997,
+          }}
+          onClick={onClose}
+        />
+      )}
+
+      {/* Tour card */}
       <div
         className="bg-white rounded-2xl shadow-2xl p-6"
         style={{
@@ -245,7 +257,7 @@ function TourOverlay({
           width: '420px',
           zIndex: 9999,
           opacity: cardVisible ? 1 : 0,
-          transition: 'top 350ms ease, left 350ms ease, opacity 200ms ease',
+          transition: 'top 300ms cubic-bezier(0.4, 0, 0.2, 1), left 300ms cubic-bezier(0.4, 0, 0.2, 1), opacity 150ms ease',
         }}
       >
         {/* Header */}
@@ -307,6 +319,6 @@ function TourOverlay({
           </button>
         </div>
       </div>
-    </div>
+    </>
   )
 }
