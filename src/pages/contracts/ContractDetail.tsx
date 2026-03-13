@@ -43,9 +43,7 @@ export default function ContractDetail() {
         km_contratados_ano: source.km_contratados_ano,
         intervalo_revisao_km: source.intervalo_revisao_km,
         status: source.status,
-        notas: `Criado por clonagem do contrato ${source.id.slice(0, 8)}`
       }
-      console.log('A criar contrato com dados:', newContract)
       const { error: insertError } = await supabase
         .from('contratos')
         .insert(newContract)
