@@ -6,6 +6,33 @@ import { getClientes } from '@/services/clients'
 import { createViatura } from '@/services/vehicles'
 import { MARCAS, MODELOS_POR_MARCA } from '@/utils/constants'
 
+const CUSTOM_MODELS_KEY = 'nors_custom_models'
+
+function getCustomModels(marca: string): string[] {
+  try {
+    const stored = localStorage.getItem(CUSTOM_MODELS_KEY)
+    if (!stored) return []
+    const all = JSON.parse(stored)
+    return all[marca] || []
+  } catch {
+    return []
+  }
+}
+
+function saveCustomModel(marca: string, modelo: string) {
+  try {
+    const stored = localStorage.getItem(CUSTOM_MODELS_KEY)
+    const all = stored ? JSON.parse(stored) : {}
+    const existing = all[marca] || []
+    if (!existing.includes(modelo)) {
+      all[marca] = [...existing, modelo]
+      localStorage.setItem(CUSTOM_MODELS_KEY, JSON.stringify(all))
+    }
+  } catch {
+    // fail silently
+  }
+}
+
 export default function VehicleForm() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -28,6 +55,9 @@ export default function VehicleForm() {
   const mutation = useMutation({
     mutationFn: createViatura,
     onSuccess: () => {
+      if (modeloCustom && modelo.trim()) {
+        saveCustomModel(marca, modelo.trim())
+      }
       queryClient.invalidateQueries({ queryKey: ['viaturas'] })
       navigate('/viaturas')
     },
@@ -130,6 +160,8 @@ export default function VehicleForm() {
                   if (e.target.value === '__outro__') {
                     setModelo('')
                     setModeloCustom(true)
+                  } else if (e.target.value === '__sep__') {
+                    // do nothing for separator
                   } else {
                     setModelo(e.target.value)
                   }
@@ -139,6 +171,14 @@ export default function VehicleForm() {
                 <option value="">Seleccionar modelo...</option>
                 {MODELOS_POR_MARCA[marca].map(m => (
                   <option key={m} value={m}>{m}</option>
+                ))}
+                {getCustomModels(marca).length > 0 && (
+                  <option key="sep" value="__sep__" disabled className="text-gray-300">
+                    ─────────
+                  </option>
+                )}
+                {getCustomModels(marca).map(m => (
+                  <option key={`custom-${m}`} value={m}>{m}</option>
                 ))}
                 <option value="__outro__">Outro...</option>
               </select>
