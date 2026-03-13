@@ -46,6 +46,21 @@ export async function getCiclosRevisao(): Promise<CicloRevisao[]> {
   return data || []
 }
 
+export async function updateDongfengCycles(
+  cycles: { posicao: number; tipo_revisao: string; descricao: string }[]
+): Promise<void> {
+  const { error: deleteError } = await supabase
+    .from('ciclos_revisao')
+    .delete()
+    .eq('marca', 'Dongfeng')
+  if (deleteError) throw deleteError
+
+  const { error: insertError } = await supabase
+    .from('ciclos_revisao')
+    .insert(cycles.map((c) => ({ ...c, marca: 'Dongfeng' })))
+  if (insertError) throw insertError
+}
+
 export async function getSystemCounts(): Promise<{
   total_clientes: number
   total_viaturas: number
