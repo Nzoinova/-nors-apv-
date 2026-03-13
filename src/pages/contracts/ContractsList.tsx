@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
-import { Plus, RefreshCw, Search, ChevronDown, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, SlidersHorizontal, Trash2 } from 'lucide-react'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
+import { Plus, RefreshCw, Search, ChevronDown, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, SlidersHorizontal, Trash2, Info } from 'lucide-react'
 import { getEstadoContratos } from '@/services/dashboard'
 import { getPipeline } from '@/services/pipeline'
 import { supabase } from '@/lib/supabase'
@@ -33,6 +33,13 @@ interface ClientGroup {
 }
 
 export default function ContractsList() {
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const addViaturaId = searchParams.get('add_viatura')
+  const addMatricula = searchParams.get('matricula')
+  const addClienteId = searchParams.get('cliente_id')
+  const isAddViaturaMode = !!addViaturaId
+
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [tipoFilter, setTipoFilter] = useState<TipoFilter>('APV')
   const [search, setSearch] = useState('')
@@ -126,6 +133,7 @@ export default function ContractsList() {
 
   const filtered = useMemo(() => {
     return (contratos || []).filter(c => {
+      if (isAddViaturaMode && addClienteId && c.cliente_id !== addClienteId) return false
       if (tipoFilter !== 'ALL' && c.tipo_contrato !== tipoFilter) return false
       if (statusFilter !== 'ALL' && c.status_contrato !== statusFilter) return false
       if (filterMarca && c.marca !== filterMarca) return false
@@ -235,6 +243,27 @@ export default function ContractsList() {
 
   return (
     <div className="space-y-5">
+      {isAddViaturaMode && (
+        <div className="mb-4 flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <Info size={16} className="text-blue-500 shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-blue-800">
+              Seleccione o contrato ao qual pretende adicionar a viatura{' '}
+              <span className="font-bold">{addMatricula}</span>
+            </p>
+            <p className="text-xs text-blue-600 mt-0.5">
+              Clique em "Ver" num contrato para abrir e adicionar a viatura.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/contratos')}
+            className="text-xs text-blue-400 hover:text-blue-600"
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
@@ -487,7 +516,7 @@ export default function ContractsList() {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-sm font-mono font-medium">
-                            <Link to={`/contratos/${c.contrato_id}`} className="text-nors-teal hover:underline">
+                            <Link to={isAddViaturaMode ? `/contratos/${c.contrato_id}?add_viatura=${addViaturaId}&matricula=${addMatricula}` : `/contratos/${c.contrato_id}`} className="text-nors-teal hover:underline">
                               {c.matricula || <span className="text-gray-400">—</span>}
                             </Link>
                           </td>

@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, RefreshCw, Pencil, X, Save } from 'lucide-react'
+import { ArrowLeft, RefreshCw, Pencil, X, Save, Info } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 import { getContrato, updateContrato } from '@/services/contracts'
 import { getOSByViatura } from '@/services/service-orders'
 import { StatusBadge } from '@/components/shared/StatusBadge'
@@ -13,9 +14,29 @@ import { getConfig } from '@/services/config'
 export default function ContractDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const queryClient = useQueryClient()
   const [editing, setEditing] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+
+  const addViaturaId = searchParams.get('add_viatura')
+  const addMatricula = searchParams.get('matricula')
+
+  const handleAddViaturaToContract = async (viaturaId: string) => {
+    try {
+      await supabase
+        .from('viaturas')
+        .update({ contrato_id: id })
+        .eq('id', viaturaId)
+
+      queryClient.invalidateQueries({ queryKey: ['contrato', id] })
+      queryClient.invalidateQueries({ queryKey: ['viaturas'] })
+      queryClient.invalidateQueries({ queryKey: ['estado-contratos'] })
+      navigate(`/contratos/${id}`)
+    } catch (err) {
+      console.error('Erro ao associar viatura:', err)
+    }
+  }
 
   const { data: contrato, isLoading } = useQuery({
     queryKey: ['contrato', id],
@@ -105,6 +126,23 @@ export default function ContractDetail() {
         onConfirm={handleSave}
         onCancel={() => setShowConfirm(false)}
       />
+
+      {addViaturaId && (
+        <div className="mb-4 flex items-center justify-between gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center gap-2">
+            <Info size={15} className="text-blue-500" />
+            <p className="text-sm text-blue-800">
+              Adicionar viatura <strong>{addMatricula}</strong> a este contrato?
+            </p>
+          </div>
+          <button
+            onClick={() => handleAddViaturaToContract(addViaturaId)}
+            className="px-3 py-1.5 bg-nors-teal text-white text-xs font-medium rounded-lg hover:bg-opacity-90"
+          >
+            Confirmar associação
+          </button>
+        </div>
+      )}
 
       <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1.5 text-sm text-nors-teal hover:underline">
         <ArrowLeft size={16} /> Voltar a Contratos

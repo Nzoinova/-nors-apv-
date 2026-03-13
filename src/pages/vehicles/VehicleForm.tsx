@@ -307,7 +307,7 @@ export default function VehicleForm() {
               <button
                 onClick={() => {
                   setShowPostCreateModal(false)
-                  navigate('/contratos')
+                  navigate(`/contratos?add_viatura=${newVehicleId}&matricula=${newVehicleInfo?.matricula}&cliente_id=${clienteId}`)
                 }}
                 className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors border border-gray-200"
               >
