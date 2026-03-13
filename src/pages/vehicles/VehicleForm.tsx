@@ -1,10 +1,37 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Save } from 'lucide-react'
 import { getClientes } from '@/services/clients'
 import { createViatura } from '@/services/vehicles'
 import { MARCAS, MODELOS_POR_MARCA } from '@/utils/constants'
+
+const CUSTOM_MODELS_KEY = 'nors_custom_models'
+
+function getCustomModels(marca: string): string[] {
+  try {
+    const stored = localStorage.getItem(CUSTOM_MODELS_KEY)
+    if (!stored) return []
+    const all = JSON.parse(stored)
+    return all[marca] || []
+  } catch {
+    return []
+  }
+}
+
+function saveCustomModel(marca: string, modelo: string) {
+  try {
+    const stored = localStorage.getItem(CUSTOM_MODELS_KEY)
+    const all = stored ? JSON.parse(stored) : {}
+    const existing = all[marca] || []
+    if (!existing.includes(modelo)) {
+      all[marca] = [...existing, modelo]
+      localStorage.setItem(CUSTOM_MODELS_KEY, JSON.stringify(all))
+    }
+  } catch {
+    // fail silently
+  }
+}
 
 export default function VehicleForm() {
   const navigate = useNavigate()
@@ -19,6 +46,9 @@ export default function VehicleForm() {
   const [kmInicial, setKmInicial] = useState('')
   const [horasMotor, setHorasMotor] = useState('')
   const [modeloCustom, setModeloCustom] = useState(false)
+  const [modeloCustomText, setModeloCustomText] = useState('')
+
+  const customModels = useMemo(() => marca ? getCustomModels(marca) : [], [marca])
 
   const { data: clientes } = useQuery({
     queryKey: ['clientes'],
@@ -28,6 +58,9 @@ export default function VehicleForm() {
   const mutation = useMutation({
     mutationFn: createViatura,
     onSuccess: () => {
+      if (modeloCustom && modeloCustomText.trim()) {
+        saveCustomModel(marca, modeloCustomText.trim())
+      }
       queryClient.invalidateQueries({ queryKey: ['viaturas'] })
       navigate('/viaturas')
     },
@@ -36,12 +69,13 @@ export default function VehicleForm() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!clienteId || !vin) return
+    const finalModelo = modeloCustom ? modeloCustomText.trim() : modelo
     mutation.mutate({
       cliente_id: clienteId,
       matricula: matricula || undefined,
       vin,
       marca,
-      modelo: modelo || undefined,
+      modelo: finalModelo || undefined,
       ano: ano ? parseInt(ano) : undefined,
       km_inicial: kmInicial ? parseInt(kmInicial) : undefined,
       horas_motor_segundos: horasMotor ? parseInt(horasMotor) : undefined,
@@ -111,7 +145,7 @@ export default function VehicleForm() {
             </label>
             <select
               value={marca}
-              onChange={(e) => { setMarca(e.target.value); setModelo(''); setModeloCustom(false) }}
+              onChange={(e) => { setMarca(e.target.value); setModelo(''); setModeloCustom(false); setModeloCustomText('') }}
               className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
             >
               {MARCAS.map(m => (
@@ -130,6 +164,9 @@ export default function VehicleForm() {
                   if (e.target.value === '__outro__') {
                     setModelo('')
                     setModeloCustom(true)
+                    setModeloCustomText('')
+                  } else if (e.target.value === '─────────') {
+                    // ignore separator
                   } else {
                     setModelo(e.target.value)
                   }
@@ -140,14 +177,22 @@ export default function VehicleForm() {
                 {MODELOS_POR_MARCA[marca].map(m => (
                   <option key={m} value={m}>{m}</option>
                 ))}
+                {customModels.length > 0 && (
+                  <option key="sep" value="─────────" disabled className="text-gray-300">
+                    ─────────
+                  </option>
+                )}
+                {customModels.map(m => (
+                  <option key={`custom-${m}`} value={m}>{m}</option>
+                ))}
                 <option value="__outro__">Outro...</option>
               </select>
             ) : (
               <input
                 type="text"
-                value={modelo}
-                onChange={(e) => setModelo(e.target.value)}
-                placeholder="Opcional"
+                value={modeloCustomText}
+                onChange={(e) => setModeloCustomText(e.target.value)}
+                placeholder="Introduzir modelo..."
                 className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20"
               />
             )}
