@@ -222,7 +222,7 @@ export default function ServiceOrderDetail() {
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Medições & Custo</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Medições & Valor Faturado</h3>
           <div className="space-y-2 text-sm">
             {editing ? (
               <>
@@ -231,13 +231,13 @@ export default function ServiceOrderDetail() {
                 {horasMotorEdit !== null && (
                   <p className="text-[10px] text-nors-teal font-semibold text-right">= {horasMotorEdit.toLocaleString()} horas</p>
                 )}
-                <EditRow label="Custo (KZ)" value={editCustoKz} onChange={setEditCustoKz} type="number" />
+                <EditRow label="Valor Faturado (s/ IVA)" value={editCustoKz} onChange={setEditCustoKz} type="number" />
               </>
             ) : (
               <>
                 <Row label="KM na Revisão" value={formatNumber(os.km_na_revisao)} bold />
                 <Row label="Horas Motor" value={formatHorasMotorCompleto(os.horas_motor_na_revisao)} />
-                <Row label="Custo" value={os.custo_kz ? formatKZ(os.custo_kz) : '—'} />
+                <Row label="Valor Faturado (s/ IVA)" value={os.custo_kz ? formatKZ(os.custo_kz) : '—'} />
               </>
             )}
           </div>

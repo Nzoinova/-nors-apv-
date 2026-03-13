@@ -155,8 +155,11 @@ export default function ServiceOrderForm() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Custo (KZ)</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Valor Faturado (s/ IVA)</label>
             <input type="number" step="0.01" value={custoKz} onChange={(e) => setCustoKz(e.target.value)} placeholder="Opcional" className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20" />
+            <p className="text-xs text-gray-400 mt-1">
+              Preencher apenas após OS concluída
+            </p>
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Técnico</label>
