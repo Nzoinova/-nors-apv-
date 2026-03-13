@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { Plus, RefreshCw, Search, MapPin, Truck } from 'lucide-react'
-import { getResumoClientes } from '@/services/clients'
+import { Plus, RefreshCw, Search, MapPin, Truck, Trash2 } from 'lucide-react'
+import { getResumoClientes, deleteCliente } from '@/services/clients'
 import { getEstadoContratos } from '@/services/dashboard'
 import { formatUSD, formatKZ } from '@/utils/formatters'
 import type { EstadoContrato } from '@/types'
@@ -49,6 +49,18 @@ const FILTER_TABS: { key: FilterTab; label: string }[] = [
 export default function ClientsList() {
   const [search, setSearch] = useState('')
   const [activeTab, setActiveTab] = useState<FilterTab>('todos')
+  const queryClient = useQueryClient()
+
+  const handleDeleteCliente = async (id: string) => {
+    try {
+      await deleteCliente(id)
+      queryClient.invalidateQueries({ queryKey: ['resumo-clientes'] })
+      queryClient.invalidateQueries({ queryKey: ['clientes'] })
+    } catch (err) {
+      console.error('Erro ao eliminar cliente:', err)
+      window.alert('Erro ao eliminar cliente. Tente novamente.')
+    }
+  }
 
   const { data: clientes, isLoading: loadingClientes } = useQuery({
     queryKey: ['resumo-clientes'],
@@ -154,12 +166,37 @@ export default function ClientsList() {
                   </h3>
                   <p className="text-xs text-gray-400 truncate">{c.cliente_nome}</p>
                 </div>
-                <Link
-                  to={`/clientes/${c.cliente_id}`}
-                  className="text-sm text-nors-teal hover:underline font-medium whitespace-nowrap"
-                >
-                  Ver &rarr;
-                </Link>
+                <div className="flex items-center gap-1.5">
+                  {c.total_viaturas === 0 && apv === 0 && cm === 0 ? (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        if (window.confirm(`Eliminar cliente "${c.cliente_nome}"? Esta acção não pode ser revertida.`)) {
+                          handleDeleteCliente(c.cliente_id)
+                        }
+                      }}
+                      className="p-1.5 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                      title="Eliminar cliente"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  ) : (
+                    <button
+                      disabled
+                      className="p-1.5 rounded text-gray-200 cursor-not-allowed"
+                      title="Cliente tem dados associados — não pode ser eliminado"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                  <Link
+                    to={`/clientes/${c.cliente_id}`}
+                    className="text-sm text-nors-teal hover:underline font-medium whitespace-nowrap"
+                  >
+                    Ver &rarr;
+                  </Link>
+                </div>
               </div>
 
               <div className="mt-3 space-y-1">
