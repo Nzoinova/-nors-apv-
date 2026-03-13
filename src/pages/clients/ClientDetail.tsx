@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, RefreshCw, Pencil, X, Save } from 'lucide-react'
-import { getCliente, updateCliente } from '@/services/clients'
+import { ArrowLeft, RefreshCw, Pencil, X, Save, Trash2 } from 'lucide-react'
+import { getCliente, updateCliente, deleteCliente } from '@/services/clients'
 import { getViaturasByCliente } from '@/services/vehicles'
+import { getEstadoContratos } from '@/services/dashboard'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { formatNumber, formatHorasMotor, formatUSD } from '@/utils/formatters'
 
@@ -25,6 +26,31 @@ export default function ClientDetail() {
     queryFn: () => getViaturasByCliente(id!),
     enabled: !!id,
   })
+
+  const { data: contratos } = useQuery({
+    queryKey: ['estado-contratos'],
+    queryFn: getEstadoContratos,
+  })
+
+  const clientContratos = useMemo(
+    () => (contratos || []).filter((c) => c.cliente_id === id),
+    [contratos, id]
+  )
+
+  const canDelete = (viaturas?.length || 0) === 0 && clientContratos.length === 0
+
+  const handleDelete = async () => {
+    if (!id) return
+    try {
+      await deleteCliente(id)
+      queryClient.invalidateQueries({ queryKey: ['clientes'] })
+      queryClient.invalidateQueries({ queryKey: ['resumo-clientes'] })
+      navigate(-1)
+    } catch (err) {
+      console.error('Erro ao eliminar cliente:', err)
+      window.alert('Erro ao eliminar cliente. Tente novamente.')
+    }
+  }
 
   const [editNome, setEditNome] = useState('')
   const [editNif, setEditNif] = useState('')
@@ -104,9 +130,32 @@ export default function ClientDetail() {
         </div>
         <div className="flex items-center gap-3">
           {!editing ? (
-            <button onClick={startEdit} className="inline-flex items-center gap-1.5 bg-white text-gray-700 h-10 px-4 rounded-md text-sm font-medium border border-gray-200 hover:bg-gray-50 transition-colors">
-              <Pencil size={14} /> Editar
-            </button>
+            <>
+              {canDelete ? (
+                <button
+                  onClick={() => {
+                    if (window.confirm(`Eliminar cliente "${cliente.nome}"? Esta acção não pode ser revertida.`)) {
+                      handleDelete()
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 bg-white text-red-500 h-10 px-4 rounded-md text-sm font-medium border border-gray-200 hover:bg-red-50 transition-colors"
+                  title="Eliminar cliente"
+                >
+                  <Trash2 size={14} /> Eliminar
+                </button>
+              ) : (
+                <button
+                  disabled
+                  className="inline-flex items-center gap-1.5 bg-white text-gray-300 h-10 px-4 rounded-md text-sm font-medium border border-gray-200 cursor-not-allowed"
+                  title="Cliente tem dados associados — não pode ser eliminado"
+                >
+                  <Trash2 size={14} /> Eliminar
+                </button>
+              )}
+              <button onClick={startEdit} className="inline-flex items-center gap-1.5 bg-white text-gray-700 h-10 px-4 rounded-md text-sm font-medium border border-gray-200 hover:bg-gray-50 transition-colors">
+                <Pencil size={14} /> Editar
+              </button>
+            </>
           ) : (
             <div className="flex gap-2">
               <button onClick={() => setEditing(false)} className="inline-flex items-center gap-1.5 bg-white text-gray-700 h-10 px-4 rounded-md text-sm font-medium border border-gray-200 hover:bg-gray-50 transition-colors">

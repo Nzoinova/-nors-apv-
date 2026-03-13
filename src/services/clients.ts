@@ -47,3 +47,11 @@ export async function updateCliente(id: string, updates: Partial<Cliente>): Prom
   if (error) throw error
   return data
 }
+
+export async function deleteCliente(id: string) {
+  const { error } = await supabase
+    .from('clientes')
+    .delete()
+    .eq('id', id)
+  if (error) throw error
+}
