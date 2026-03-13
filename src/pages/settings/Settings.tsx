@@ -279,11 +279,11 @@ export default function Settings() {
         <dl className="space-y-3 text-sm">
           <div className="flex justify-between py-1 border-b border-gray-50">
             <dt className="text-gray-500">Versão</dt>
-            <dd className="font-medium text-gray-900">1.0.0</dd>
+            <dd className="font-medium text-gray-900">1.1.0</dd>
           </div>
           <div className="flex justify-between py-1 border-b border-gray-50">
             <dt className="text-gray-500">Última actualização</dt>
-            <dd className="font-medium text-gray-900">Março 2026</dd>
+            <dd className="font-medium text-gray-900">13/03/2026</dd>
           </div>
           <div className="flex justify-between py-1 border-b border-gray-50">
             <dt className="text-gray-500">Total de clientes</dt>
@@ -306,8 +306,10 @@ export default function Settings() {
             <dd className="font-medium text-gray-900">{counts ? formatNumber(counts.total_viaturas) : '—'}</dd>
           </div>
           <div className="flex justify-between py-1">
-            <dt className="text-gray-500">Supabase Project</dt>
-            <dd className="font-medium text-gray-900 font-mono text-xs">tesizdabthzkvlhlphvl</dd>
+            <dt className="text-gray-500">Portal da Recepção</dt>
+            <dd className="inline-flex items-center gap-1.5 font-medium text-emerald-600">
+              <ExternalLink size={14} /> Activo
+            </dd>
           </div>
         </dl>
       </div>

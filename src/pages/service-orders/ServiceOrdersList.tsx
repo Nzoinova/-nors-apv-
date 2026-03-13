@@ -49,7 +49,7 @@ export default function ServiceOrdersList() {
               <th className="text-right px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">KM</th>
               <th className="text-right px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Motor</th>
               <th className="text-center px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Local</th>
-              <th className="text-right px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Custo KZ</th>
+              <th className="text-right px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Valor Faturado (s/ IVA)</th>
               <th className="text-center px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
             </tr>
           </thead>
