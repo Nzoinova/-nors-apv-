@@ -5,6 +5,7 @@ import { ArrowLeft, Save, Plus } from 'lucide-react'
 import { getClientes } from '@/services/clients'
 import { getViaturasByCliente } from '@/services/vehicles'
 import { createContrato } from '@/services/contracts'
+import { supabase } from '@/lib/supabase'
 
 export default function ContractForm() {
   const navigate = useNavigate()
@@ -30,6 +31,22 @@ export default function ContractForm() {
     queryFn: () => getViaturasByCliente(clienteId),
     enabled: !!clienteId,
   })
+
+  const { data: activeContracts } = useQuery({
+    queryKey: ['active-contracts'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('contratos')
+        .select('viatura_id, status')
+        .in('status', ['ACTIVO', 'A_RENOVAR'])
+        .is('status_pipeline', null)
+      return data
+    },
+  })
+
+  const takenViaturaIds = new Set(
+    activeContracts?.map(c => c.viatura_id).filter(Boolean) || []
+  )
 
   const mutation = useMutation({
     mutationFn: createContrato,
@@ -89,9 +106,18 @@ export default function ContractForm() {
           </div>
           <select value={viaturaId} onChange={(e) => setViaturaId(e.target.value)} required disabled={!clienteId} className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20 disabled:opacity-50">
             <option value="">{clienteId ? 'Seleccionar viatura...' : 'Seleccione um cliente primeiro'}</option>
-            {(viaturas || []).map(v => (
-              <option key={v.id} value={v.id}>{v.matricula || 'S/Mat'} — {v.vin} ({v.marca})</option>
-            ))}
+            {(viaturas || []).map(v => {
+              const isTaken = takenViaturaIds.has(v.id)
+              const isDisabled = isTaken
+              return (
+                <option key={v.id} value={v.id} disabled={isDisabled}>
+                  {isDisabled
+                    ? `${v.matricula || 'S/Mat'} — ${v.vin} (${v.marca}) (contrato activo)`
+                    : `${v.matricula || 'S/Mat'} — ${v.vin} (${v.marca})`
+                  }
+                </option>
+              )
+            })}
           </select>
           {clienteId && viaturas && viaturas.length === 0 && (
             <p className="text-xs text-amber-600 mt-1.5">
