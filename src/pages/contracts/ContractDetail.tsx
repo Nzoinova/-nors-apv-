@@ -32,21 +32,23 @@ export default function ContractDetail() {
 
       if (readError || !source) throw readError
 
+      const newContract = {
+        viatura_id: viaturaId,
+        cliente_id: source.cliente_id,
+        tipo_contrato: source.tipo_contrato,
+        valor_mensal_usd: source.valor_mensal_usd,
+        data_inicio: source.data_inicio,
+        data_fim: source.data_fim,
+        duracao_meses: source.duracao_meses,
+        km_contratados_ano: source.km_contratados_ano,
+        intervalo_revisao_km: source.intervalo_revisao_km,
+        status: source.status,
+        notas: `Criado por clonagem do contrato ${source.id.slice(0, 8)}`
+      }
+      console.log('A criar contrato com dados:', newContract)
       const { error: insertError } = await supabase
         .from('contratos')
-        .insert({
-          viatura_id: viaturaId,
-          cliente_id: source.cliente_id,
-          tipo_contrato: source.tipo_contrato,
-          valor_mensal_usd: source.valor_mensal_usd,
-          data_inicio: source.data_inicio,
-          data_fim: source.data_fim,
-          duracao_meses: source.duracao_meses,
-          km_contratados_ano: source.km_contratados_ano,
-          intervalo_revisao_km: source.intervalo_revisao_km,
-          status: source.status,
-          notas: `Criado por clonagem do contrato ${source.id.slice(0, 8)}`
-        })
+        .insert(newContract)
 
       if (insertError) throw insertError
 
@@ -54,9 +56,10 @@ export default function ContractDetail() {
       queryClient.invalidateQueries({ queryKey: ['contratos'] })
 
       navigate(`/contratos`)
-    } catch (err) {
-      console.error('Erro ao criar contrato para viatura:', err)
-      window.alert('Erro ao criar contrato. Tente novamente.')
+    } catch (err: any) {
+      console.error('Erro ao criar contrato:', err)
+      console.error('Erro detalhes:', JSON.stringify(err, null, 2))
+      window.alert(`Erro: ${err?.message || err?.code || 'Erro desconhecido'}`)
     }
   }
 
