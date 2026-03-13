@@ -46,11 +46,16 @@ export async function createContrato(form: {
   valor_mensal_usd: number | null
   km_anuais_contratados: number
   km_total_contratados: number
+  data_fim?: string
   observacoes?: string
 }): Promise<Contrato> {
-  const dataInicio = new Date(form.data_inicio)
-  const dataValidade = new Date(dataInicio)
-  dataValidade.setMonth(dataValidade.getMonth() + form.duracao_meses)
+  const dataValidade = form.data_fim
+    ? form.data_fim
+    : (() => {
+        const d = new Date(form.data_inicio)
+        d.setMonth(d.getMonth() + form.duracao_meses)
+        return d.toISOString().split('T')[0]
+      })()
 
   const { data, error } = await supabase
     .from('contratos')
@@ -59,7 +64,7 @@ export async function createContrato(form: {
       viatura_id: form.viatura_id,
       data_inicio: form.data_inicio,
       duracao_meses: form.duracao_meses,
-      data_validade: dataValidade.toISOString().split('T')[0],
+      data_validade: dataValidade,
       intervalo_km_revisao: form.intervalo_km_revisao,
       valor_mensal_usd: form.valor_mensal_usd,
       km_anuais_contratados: form.km_anuais_contratados,

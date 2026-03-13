@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Save, Plus } from 'lucide-react'
@@ -14,12 +14,22 @@ export default function ContractForm() {
   const [clienteId, setClienteId] = useState('')
   const [viaturaId, setViaturaId] = useState('')
   const [dataInicio, setDataInicio] = useState(new Date().toISOString().split('T')[0])
+  const [dataFim, setDataFim] = useState('')
+  const [dataFimManual, setDataFimManual] = useState(false)
   const [duracaoMeses, setDuracaoMeses] = useState(24)
   const [intervaloKm, setIntervaloKm] = useState(15000)
   const [valorMensal, setValorMensal] = useState('')
   const [kmAnuais, setKmAnuais] = useState(60000)
   const [kmTotal, setKmTotal] = useState(120000)
   const [obs, setObs] = useState('')
+
+  useEffect(() => {
+    if (!dataFimManual && dataInicio && duracaoMeses > 0) {
+      const start = new Date(dataInicio)
+      start.setMonth(start.getMonth() + duracaoMeses)
+      setDataFim(start.toISOString().split('T')[0])
+    }
+  }, [dataInicio, duracaoMeses, dataFimManual])
 
   const { data: clientes } = useQuery({
     queryKey: ['clientes'],
@@ -64,6 +74,7 @@ export default function ContractForm() {
       cliente_id: clienteId,
       viatura_id: viaturaId,
       data_inicio: dataInicio,
+      data_fim: dataFim || undefined,
       duracao_meses: duracaoMeses,
       intervalo_km_revisao: intervaloKm,
       valor_mensal_usd: valorMensal ? parseFloat(valorMensal) : null,
@@ -126,14 +137,18 @@ export default function ContractForm() {
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Data Início</label>
-            <input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} required className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20" />
+            <input type="date" value={dataInicio} onChange={(e) => { setDataInicio(e.target.value); setDataFimManual(false) }} required className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20" />
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Duração (meses)</label>
-            <input type="number" value={duracaoMeses} onChange={(e) => setDuracaoMeses(parseInt(e.target.value) || 24)} min={1} className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20" />
+            <input type="number" value={duracaoMeses} onChange={(e) => { setDuracaoMeses(parseInt(e.target.value) || 24); setDataFimManual(false) }} min={1} className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Data Fim</label>
+            <input type="date" value={dataFim} onChange={(e) => { setDataFim(e.target.value); setDataFimManual(true) }} className="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20" />
           </div>
         </div>
 
