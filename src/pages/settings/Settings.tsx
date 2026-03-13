@@ -1,46 +1,40 @@
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { RefreshCw, Save, Copy, ExternalLink } from 'lucide-react'
-import { getConfig, updateConfiguracoes, getCiclosRevisao, getSystemCounts } from '@/services/config'
+import { useState, useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { RefreshCw, Save, Copy, ExternalLink, Lock } from 'lucide-react'
+import { getConfig, updateConfiguracoes, getCiclosRevisao, getSystemCounts, updateDongfengCycles } from '@/services/config'
 import { formatNumber } from '@/utils/formatters'
 import type { CicloRevisao } from '@/types'
 
 const PORTAL_URL = 'https://nzoinova.github.io/-nors-apv-/#/recepcao'
 
-const DEFAULT_CICLOS: { marca: string; ciclos: { posicao: number; tipo_revisao: string; descricao: string }[] }[] = [
-  {
-    marca: 'Volvo',
-    ciclos: [
-      { posicao: 1, tipo_revisao: 'B1', descricao: 'Básica' },
-      { posicao: 2, tipo_revisao: 'B2', descricao: 'Básica' },
-      { posicao: 3, tipo_revisao: 'B3', descricao: 'Básica' },
-      { posicao: 4, tipo_revisao: 'MC', descricao: 'Completa' },
-    ],
-  },
-  {
-    marca: 'Dongfeng',
-    ciclos: [
-      { posicao: 1, tipo_revisao: 'B1', descricao: 'Básica' },
-      { posicao: 2, tipo_revisao: 'B2', descricao: 'Básica' },
-      { posicao: 3, tipo_revisao: 'B3', descricao: 'Básica' },
-      { posicao: 4, tipo_revisao: 'B4', descricao: 'Básica' },
-      { posicao: 5, tipo_revisao: 'MC', descricao: 'Completa' },
-    ],
-  },
+const VOLVO_FIXED = [
+  { posicao: 1, tipo_revisao: 'B1', descricao: 'Básica' },
+  { posicao: 2, tipo_revisao: 'B2', descricao: 'Básica' },
+  { posicao: 3, tipo_revisao: 'B3', descricao: 'Básica' },
+  { posicao: 4, tipo_revisao: 'MC', descricao: 'Completa' },
+]
+
+const DONGFENG_5 = [
+  { posicao: 1, tipo_revisao: 'B1', descricao: 'Básica' },
+  { posicao: 2, tipo_revisao: 'B2', descricao: 'Básica' },
+  { posicao: 3, tipo_revisao: 'B3', descricao: 'Básica' },
+  { posicao: 4, tipo_revisao: 'B4', descricao: 'Básica' },
+  { posicao: 5, tipo_revisao: 'MC', descricao: 'Completa' },
+]
+
+const DONGFENG_7 = [
+  { posicao: 1, tipo_revisao: 'B1', descricao: 'Básica' },
+  { posicao: 2, tipo_revisao: 'B2', descricao: 'Básica' },
+  { posicao: 3, tipo_revisao: 'B3', descricao: 'Básica' },
+  { posicao: 4, tipo_revisao: 'B4', descricao: 'Básica' },
+  { posicao: 5, tipo_revisao: 'B5', descricao: 'Básica' },
+  { posicao: 6, tipo_revisao: 'B6', descricao: 'Básica' },
+  { posicao: 7, tipo_revisao: 'MC', descricao: 'Completa' },
 ]
 
 function getTipoDescricao(tipo: string): string {
   if (tipo === 'MC') return 'Completa'
   return 'Básica'
-}
-
-function groupCiclosByMarca(ciclos: CicloRevisao[]) {
-  const grouped: Record<string, CicloRevisao[]> = {}
-  for (const c of ciclos) {
-    if (!grouped[c.marca]) grouped[c.marca] = []
-    grouped[c.marca].push(c)
-  }
-  return grouped
 }
 
 export default function Settings() {
@@ -51,6 +45,8 @@ export default function Settings() {
   const [configLoaded, setConfigLoaded] = useState(false)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [dongfengCycleCount, setDongfengCycleCount] = useState<5 | 7>(5)
+  const [dongfengSaved, setDongfengSaved] = useState(false)
 
   const { data: config, isLoading: configLoading } = useQuery({
     queryKey: ['config'],
@@ -67,6 +63,13 @@ export default function Settings() {
     queryFn: getSystemCounts,
   })
 
+  // Detect current Dongfeng cycle count from DB
+  useEffect(() => {
+    if (ciclos && ciclos.filter((c: CicloRevisao) => c.marca === 'Dongfeng').length === 7) {
+      setDongfengCycleCount(7)
+    }
+  }, [ciclos])
+
   // Initialize form values from config
   if (config && !configLoaded) {
     setTaxaCambio(String(config.taxa_cambio_usd_kz))
@@ -75,27 +78,41 @@ export default function Settings() {
     setConfigLoaded(true)
   }
 
-  const mutation = useMutation({
-    mutationFn: (updates: { taxa_cambio_usd_kz: number; alerta_renovacao_dias: number; intervalo_dias_revisao: number }) =>
-      updateConfiguracoes({
-        ...updates,
+  const handleSave = async () => {
+    const taxa = parseFloat(taxaCambio)
+    const alerta = parseInt(alertaRenovacao)
+    const intervalo = parseInt(intervaloDias)
+    if (isNaN(taxa) || isNaN(alerta) || isNaN(intervalo)) return
+    try {
+      await updateConfiguracoes({
+        taxa_cambio_usd_kz: taxa,
+        alerta_renovacao_dias: alerta,
+        intervalo_dias_revisao: intervalo,
         data_atualizacao_taxa: new Date().toISOString().split('T')[0],
-      }),
-    onSuccess: () => {
+      })
       queryClient.invalidateQueries({ queryKey: ['config'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard-kpis'] })
       queryClient.invalidateQueries({ queryKey: ['estado-contratos'] })
       setSaveMessage('Alterações guardadas com sucesso.')
       setTimeout(() => setSaveMessage(null), 3000)
-    },
-  })
+    } catch (err) {
+      console.error('Erro ao guardar configurações:', err)
+    }
+  }
 
-  const handleSave = () => {
-    const taxa = parseFloat(taxaCambio)
-    const alerta = parseInt(alertaRenovacao)
-    const intervalo = parseInt(intervaloDias)
-    if (isNaN(taxa) || isNaN(alerta) || isNaN(intervalo)) return
-    mutation.mutate({ taxa_cambio_usd_kz: taxa, alerta_renovacao_dias: alerta, intervalo_dias_revisao: intervalo })
+  const handleDongfengCycleChange = async (count: 5 | 7) => {
+    setDongfengCycleCount(count)
+    const newCycle = count === 5 ? DONGFENG_5 : DONGFENG_7
+
+    try {
+      await updateDongfengCycles(newCycle)
+      queryClient.invalidateQueries({ queryKey: ['ciclos-revisao'] })
+
+      setDongfengSaved(true)
+      setTimeout(() => setDongfengSaved(false), 2000)
+    } catch (err) {
+      console.error('Erro ao actualizar ciclo:', err)
+    }
   }
 
   const handleCopy = async () => {
@@ -112,7 +129,7 @@ export default function Settings() {
     )
   }
 
-  const ciclosGrouped = ciclos && ciclos.length > 0 ? groupCiclosByMarca(ciclos) : null
+  const dongfengCycles = dongfengCycleCount === 5 ? DONGFENG_5 : DONGFENG_7
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -171,11 +188,10 @@ export default function Settings() {
             )}
             <button
               onClick={handleSave}
-              disabled={mutation.isPending}
-              className="inline-flex items-center gap-2 bg-nors-teal text-white h-10 px-5 rounded-md text-sm font-medium hover:opacity-90 disabled:opacity-50"
+              className="inline-flex items-center gap-2 bg-nors-teal text-white h-10 px-5 rounded-md text-sm font-medium hover:opacity-90"
             >
               <Save size={16} />
-              {mutation.isPending ? 'A guardar...' : 'Guardar Alterações'}
+              Guardar Alterações
             </button>
           </div>
         </div>
@@ -186,55 +202,86 @@ export default function Settings() {
         <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 pb-3 mb-4 border-b border-gray-200">
           Ciclos de Revisão
         </h2>
-        {ciclosGrouped ? (
-          Object.entries(ciclosGrouped).map(([marca, items]) => (
-            <div key={marca} className="mb-5 last:mb-0">
-              <h3 className="text-sm font-semibold text-nors-off-black mb-2">{marca}</h3>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-gray-500 border-b border-gray-100">
-                    <th className="py-2 font-medium">Posição</th>
-                    <th className="py-2 font-medium">Tipo de Revisão</th>
-                    <th className="py-2 font-medium">Descrição</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((c) => (
-                    <tr key={c.id} className="border-b border-gray-50">
-                      <td className="py-2">{c.posicao}</td>
-                      <td className="py-2 font-medium">{c.tipo_revisao}</td>
-                      <td className="py-2 text-gray-600">{getTipoDescricao(c.tipo_revisao)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+
+        {/* Volvo — Fixed */}
+        <div className="mb-5">
+          <div className="flex items-center gap-2 mb-2">
+            <h3 className="text-sm font-semibold text-nors-off-black">Volvo</h3>
+            <div className="flex items-center gap-1 text-gray-400">
+              <Lock size={12} />
+              <span className="text-xs">Ciclo fixo — 4 intervenções (3B + 1C)</span>
             </div>
-          ))
-        ) : (
-          DEFAULT_CICLOS.map((group) => (
-            <div key={group.marca} className="mb-5 last:mb-0">
-              <h3 className="text-sm font-semibold text-nors-off-black mb-2">{group.marca}</h3>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-gray-500 border-b border-gray-100">
-                    <th className="py-2 font-medium">Posição</th>
-                    <th className="py-2 font-medium">Tipo de Revisão</th>
-                    <th className="py-2 font-medium">Descrição</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {group.ciclos.map((c) => (
-                    <tr key={c.tipo_revisao} className="border-b border-gray-50">
-                      <td className="py-2">{c.posicao}</td>
-                      <td className="py-2 font-medium">{c.tipo_revisao}</td>
-                      <td className="py-2 text-gray-600">{c.descricao}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          </div>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-gray-500 border-b border-gray-100">
+                <th className="py-2 font-medium">Posição</th>
+                <th className="py-2 font-medium">Tipo de Revisão</th>
+                <th className="py-2 font-medium">Descrição</th>
+              </tr>
+            </thead>
+            <tbody>
+              {VOLVO_FIXED.map((c) => (
+                <tr key={c.tipo_revisao} className="border-b border-gray-50 text-gray-400">
+                  <td className="py-2">{c.posicao}</td>
+                  <td className="py-2 font-medium">{c.tipo_revisao}</td>
+                  <td className="py-2">{c.descricao}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Dongfeng — Editable */}
+        <div>
+          <h3 className="text-sm font-semibold text-nors-off-black mb-2">Dongfeng</h3>
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-xs text-gray-600">Ciclo Dongfeng:</span>
+            <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+              <button
+                onClick={() => handleDongfengCycleChange(5)}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                  dongfengCycleCount === 5
+                    ? 'bg-nors-teal text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                5 intervenções
+              </button>
+              <button
+                onClick={() => handleDongfengCycleChange(7)}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                  dongfengCycleCount === 7
+                    ? 'bg-nors-teal text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                7 intervenções
+              </button>
             </div>
-          ))
-        )}
+            {dongfengSaved && (
+              <span className="text-xs text-emerald-600 font-medium">✓ Guardado</span>
+            )}
+          </div>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-gray-500 border-b border-gray-100">
+                <th className="py-2 font-medium">Posição</th>
+                <th className="py-2 font-medium">Tipo de Revisão</th>
+                <th className="py-2 font-medium">Descrição</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dongfengCycles.map((c) => (
+                <tr key={c.tipo_revisao} className="border-b border-gray-50">
+                  <td className="py-2">{c.posicao}</td>
+                  <td className="py-2 font-medium">{c.tipo_revisao}</td>
+                  <td className="py-2 text-gray-600">{c.descricao}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Section 3: Portal da Recepção */}
