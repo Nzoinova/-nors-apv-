@@ -22,19 +22,41 @@ export default function ContractDetail() {
   const addViaturaId = searchParams.get('add_viatura')
   const addMatricula = searchParams.get('matricula')
 
-  const handleAddViaturaToContract = async (viaturaId: string) => {
+  const handleCloneContractForViatura = async (viaturaId: string) => {
     try {
-      await supabase
-        .from('viaturas')
-        .update({ contrato_id: id })
-        .eq('id', viaturaId)
+      const { data: source, error: readError } = await supabase
+        .from('contratos')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (readError || !source) throw readError
+
+      const { error: insertError } = await supabase
+        .from('contratos')
+        .insert({
+          viatura_id: viaturaId,
+          cliente_id: source.cliente_id,
+          tipo_contrato: source.tipo_contrato,
+          valor_mensal_usd: source.valor_mensal_usd,
+          data_inicio: source.data_inicio,
+          data_fim: source.data_fim,
+          duracao_meses: source.duracao_meses,
+          km_contratados_ano: source.km_contratados_ano,
+          intervalo_revisao_km: source.intervalo_revisao_km,
+          status: source.status,
+          notas: `Criado por clonagem do contrato ${source.id.slice(0, 8)}`
+        })
+
+      if (insertError) throw insertError
 
       queryClient.invalidateQueries({ queryKey: ['contrato', id] })
-      queryClient.invalidateQueries({ queryKey: ['viaturas'] })
-      queryClient.invalidateQueries({ queryKey: ['estado-contratos'] })
-      navigate(`/contratos/${id}`)
+      queryClient.invalidateQueries({ queryKey: ['contratos'] })
+
+      navigate(`/contratos`)
     } catch (err) {
-      console.error('Erro ao associar viatura:', err)
+      console.error('Erro ao criar contrato para viatura:', err)
+      window.alert('Erro ao criar contrato. Tente novamente.')
     }
   }
 
@@ -131,15 +153,20 @@ export default function ContractDetail() {
         <div className="mb-4 flex items-center justify-between gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg">
           <div className="flex items-center gap-2">
             <Info size={15} className="text-blue-500" />
-            <p className="text-sm text-blue-800">
-              Adicionar viatura <strong>{addMatricula}</strong> a este contrato?
-            </p>
+            <div>
+              <p className="text-sm text-blue-800">
+                Criar contrato para <strong>{addMatricula}</strong> com as mesmas condições deste contrato?
+              </p>
+              <p className="text-xs text-blue-500 mt-1">
+                Será criado um novo contrato independente com valor e datas iguais.
+              </p>
+            </div>
           </div>
           <button
-            onClick={() => handleAddViaturaToContract(addViaturaId)}
+            onClick={() => handleCloneContractForViatura(addViaturaId)}
             className="px-3 py-1.5 bg-nors-teal text-white text-xs font-medium rounded-lg hover:bg-opacity-90"
           >
-            Confirmar associação
+            Criar contrato com estas condições
           </button>
         </div>
       )}
