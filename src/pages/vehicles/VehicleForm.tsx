@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Save } from 'lucide-react'
+import { ArrowLeft, Save, CheckCircle2, ArrowRight } from 'lucide-react'
 import { getClientes } from '@/services/clients'
 import { createViatura } from '@/services/vehicles'
 import { MARCAS, MODELOS_POR_MARCA } from '@/utils/constants'
@@ -47,6 +47,12 @@ export default function VehicleForm() {
   const [horasMotor, setHorasMotor] = useState('')
   const [modeloCustom, setModeloCustom] = useState(false)
   const [modeloCustomText, setModeloCustomText] = useState('')
+  const [showPostCreateModal, setShowPostCreateModal] = useState(false)
+  const [newVehicleId, setNewVehicleId] = useState<string | null>(null)
+  const [newVehicleInfo, setNewVehicleInfo] = useState<{
+    matricula: string
+    cliente_nome: string
+  } | null>(null)
 
   const customModels = useMemo(() => marca ? getCustomModels(marca) : [], [marca])
 
@@ -57,12 +63,18 @@ export default function VehicleForm() {
 
   const mutation = useMutation({
     mutationFn: createViatura,
-    onSuccess: () => {
+    onSuccess: (data) => {
       if (modeloCustom && modeloCustomText.trim()) {
         saveCustomModel(marca, modeloCustomText.trim())
       }
       queryClient.invalidateQueries({ queryKey: ['viaturas'] })
-      navigate('/viaturas')
+      const clienteNome = clientes?.find(c => c.id === clienteId)?.nome || 'Cliente'
+      setNewVehicleId(data.id)
+      setNewVehicleInfo({
+        matricula: data.matricula || data.vin,
+        cliente_nome: clienteNome,
+      })
+      setShowPostCreateModal(true)
     },
   })
 
@@ -261,6 +273,60 @@ export default function VehicleForm() {
           {mutation.isPending ? 'A guardar...' : 'Adicionar Viatura'}
         </button>
       </form>
+
+      {showPostCreateModal && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
+                <CheckCircle2 size={20} className="text-emerald-500" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900">
+                  Viatura criada com sucesso
+                </h3>
+                <p className="text-xs text-gray-500">
+                  {newVehicleInfo?.matricula} · {newVehicleInfo?.cliente_nome}
+                </p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-700 mb-4">
+              Deseja associar esta viatura a um contrato de manutenção?
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  setShowPostCreateModal(false)
+                  navigate(`/contratos/novo?viatura_id=${newVehicleId}`)
+                }}
+                className="w-full flex items-center justify-between px-4 py-3 bg-nors-teal text-white rounded-lg text-sm font-medium hover:bg-opacity-90 transition-colors"
+              >
+                <span>Criar novo contrato para esta viatura</span>
+                <ArrowRight size={16} />
+              </button>
+              <button
+                onClick={() => {
+                  setShowPostCreateModal(false)
+                  navigate('/contratos')
+                }}
+                className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors border border-gray-200"
+              >
+                <span>Adicionar a contrato existente</span>
+                <ArrowRight size={16} />
+              </button>
+              <button
+                onClick={() => {
+                  setShowPostCreateModal(false)
+                  navigate('/viaturas')
+                }}
+                className="w-full px-4 py-2 text-sm text-gray-400 hover:text-gray-600 transition-colors text-center"
+              >
+                Fazer mais tarde
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
