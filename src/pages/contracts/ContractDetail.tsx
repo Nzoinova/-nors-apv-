@@ -78,6 +78,8 @@ export default function ContractDetail() {
     queryFn: getConfig,
   })
 
+  const [editDataInicio, setEditDataInicio] = useState('')
+  const [editDataValidade, setEditDataValidade] = useState('')
   const [editValorMensal, setEditValorMensal] = useState('')
   const [editDuracao, setEditDuracao] = useState('')
   const [editIntervaloKm, setEditIntervaloKm] = useState('')
@@ -87,6 +89,8 @@ export default function ContractDetail() {
 
   function startEdit() {
     if (!contrato) return
+    setEditDataInicio(contrato.data_inicio ? contrato.data_inicio.slice(0, 10) : '')
+    setEditDataValidade(contrato.data_validade ? contrato.data_validade.slice(0, 10) : '')
     setEditValorMensal(contrato.valor_mensal_usd?.toString() || '')
     setEditDuracao(contrato.duracao_meses.toString())
     setEditIntervaloKm(contrato.intervalo_km_revisao.toString())
@@ -111,7 +115,8 @@ export default function ContractDetail() {
     mutation.mutate({
       valor_mensal_usd: editValorMensal ? parseFloat(editValorMensal) : null,
       duracao_meses: parseInt(editDuracao) || contrato!.duracao_meses,
-      data_inicio: contrato!.data_inicio,
+      data_inicio: editDataInicio,
+      data_validade: editDataValidade,
       intervalo_km_revisao: parseInt(editIntervaloKm) || contrato!.intervalo_km_revisao,
       km_anuais_contratados: parseInt(editKmAnuais) || contrato!.km_anuais_contratados,
       km_total_contratados: parseInt(editKmTotal) || contrato!.km_total_contratados,
@@ -212,13 +217,27 @@ export default function ContractDetail() {
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 space-y-3">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Contrato</h3>
           <div className="space-y-2 text-sm">
-            <Row label="Início" value={formatDate(contrato.data_inicio)} />
+            {editing ? (
+              <div className="flex justify-between items-center gap-3">
+                <span className="text-gray-500 text-xs whitespace-nowrap">Início</span>
+                <input type="date" value={editDataInicio} onChange={(e) => setEditDataInicio(e.target.value)} className="w-28 px-2 py-1 rounded border border-gray-200 focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20 text-xs text-right focus:outline-none" />
+              </div>
+            ) : (
+              <Row label="Início" value={formatDate(contrato.data_inicio)} />
+            )}
             {editing ? (
               <EditRow label="Duração (meses)" value={editDuracao} onChange={setEditDuracao} type="number" />
             ) : (
               <Row label="Duração" value={`${contrato.duracao_meses} meses`} />
             )}
-            <Row label="Validade" value={formatDate(contrato.data_validade)} />
+            {editing ? (
+              <div className="flex justify-between items-center gap-3">
+                <span className="text-gray-500 text-xs whitespace-nowrap">Validade</span>
+                <input type="date" value={editDataValidade} onChange={(e) => setEditDataValidade(e.target.value)} className="w-28 px-2 py-1 rounded border border-gray-200 focus:border-nors-teal focus:ring-1 focus:ring-nors-teal/20 text-xs text-right focus:outline-none" />
+              </div>
+            ) : (
+              <Row label="Validade" value={formatDate(contrato.data_validade)} />
+            )}
             <Row label="Dias restantes" value={`${diasRestantes}`} bold />
           </div>
         </div>
