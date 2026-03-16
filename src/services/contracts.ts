@@ -79,6 +79,7 @@ export async function createContrato(form: {
 
 export async function updateContrato(id: string, form: {
   data_inicio?: string
+  data_validade?: string
   duracao_meses?: number
   intervalo_km_revisao?: number
   valor_mensal_usd?: number | null
@@ -88,7 +89,7 @@ export async function updateContrato(id: string, form: {
 }): Promise<Contrato> {
   const updates: Record<string, unknown> = { ...form }
 
-  if (form.data_inicio && form.duracao_meses) {
+  if (!form.data_validade && form.data_inicio && form.duracao_meses) {
     const dataInicio = new Date(form.data_inicio)
     const dataValidade = new Date(dataInicio)
     dataValidade.setMonth(dataValidade.getMonth() + form.duracao_meses)
