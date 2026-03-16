@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { RefreshCw, Save, Copy, ExternalLink, Lock } from 'lucide-react'
 import { getConfig, updateConfiguracoes, getCiclosRevisao, getSystemCounts, updateDongfengCycles } from '@/services/config'
-import { formatNumber } from '@/utils/formatters'
+import { getChangelogs } from '@/services/changelog'
+import { formatNumber, formatDate } from '@/utils/formatters'
 import type { CicloRevisao } from '@/types'
 
 const PORTAL_URL = 'https://nzoinova.github.io/-nors-apv-/#/recepcao'
@@ -61,6 +62,11 @@ export default function Settings() {
   const { data: counts } = useQuery({
     queryKey: ['system-counts'],
     queryFn: getSystemCounts,
+  })
+
+  const { data: changelogs } = useQuery({
+    queryKey: ['changelogs'],
+    queryFn: getChangelogs,
   })
 
   // Detect current Dongfeng cycle count from DB
@@ -138,6 +144,52 @@ export default function Settings() {
         <p className="text-sm font-light text-gray-500 mt-1">
           Gestão de parâmetros do sistema
         </p>
+      </div>
+
+      {/* Section 0: Actualizações do Sistema */}
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+        <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">
+          Actualizações do Sistema
+        </h2>
+
+        <div className="space-y-6">
+          {changelogs?.map((log) => (
+            <div key={log.id}>
+              <div className="flex items-center gap-3 mb-3">
+                <span className="px-2.5 py-1 bg-nors-teal text-white text-xs font-bold rounded-full">
+                  v{log.versao}
+                </span>
+                <span className="text-sm font-semibold text-gray-900">
+                  {log.titulo}
+                </span>
+                <span className="text-xs text-gray-400 ml-auto">
+                  {formatDate(log.data_lancamento)}
+                </span>
+              </div>
+
+              <div className="space-y-1.5 pl-2">
+                {log.mudancas.map((m, i) => (
+                  <div key={i} className="flex items-start gap-2">
+                    <span className={`
+                      shrink-0 mt-0.5 px-1.5 py-0.5 rounded text-xs font-medium
+                      ${m.tipo === 'novo'
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : m.tipo === 'melhoria'
+                          ? 'bg-blue-50 text-blue-700'
+                          : 'bg-amber-50 text-amber-700'}
+                    `}>
+                      {m.tipo === 'novo' ? '+ Novo'
+                        : m.tipo === 'melhoria' ? '\u2191 Melhoria'
+                        : '\u2713 Fix'}
+                    </span>
+                    <span className="text-xs text-gray-600">{m.descricao}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="border-b border-gray-100 mt-4" />
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Section 1: Câmbio e Alertas */}
