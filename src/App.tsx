@@ -1,6 +1,8 @@
+import { useState, useEffect } from 'react'
 import { HashRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Layout } from '@/components/layout/Layout'
+import LoadingScreen from '@/components/shared/LoadingScreen'
 import Dashboard from '@/pages/Dashboard'
 import ContractsList from '@/pages/contracts/ContractsList'
 import ContractDetail from '@/pages/contracts/ContractDetail'
@@ -27,6 +29,15 @@ const queryClient = new QueryClient({
 })
 
 export default function App() {
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1500)
+    return () => clearTimeout(timer)
+  }, [])
+
+  if (isLoading) return <LoadingScreen />
+
   return (
     <QueryClientProvider client={queryClient}>
       <HashRouter>
