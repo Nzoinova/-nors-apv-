@@ -52,7 +52,7 @@ l26 95 4 973 3 972 -415 0 -416 0 0 -1134 c0 -1218 2 -1168 -48 -1152 -14 5
       {/* Text */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
         <span className="nors-loader-text" style={{ color: 'white', fontSize: '11px', letterSpacing: '0.3em', textTransform: 'uppercase' }}>
-          Gestão APV
+          APV
         </span>
         <span className="nors-loader-tagline" style={{ color: '#9CC7DE', fontSize: '10px', letterSpacing: '0.2em' }}>
           Making it work.
