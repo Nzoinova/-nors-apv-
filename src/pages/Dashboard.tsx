@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import {
   FileText, DollarSign, AlertTriangle, Users, Truck,
-  RefreshCw, Plus, Clock, CheckCircle, XCircle, ChevronRight, ArrowRight, Loader2,
+  RefreshCw, Plus, Clock, CheckCircle, CheckCircle2, XCircle, ChevronRight, ArrowRight, Loader2,
   Pencil, Check, X,
 } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
@@ -189,10 +189,15 @@ export default function Dashboard() {
 
   const contratosProximos = useMemo(() => {
     if (!contratos) return []
+    const excludedStatuses = new Set(['EXPIRADO', 'FECHADO'])
     return contratos
-      .filter(c => c.tipo_contrato === 'APV' && c.status_contrato !== 'FECHADO')
+      .filter(c =>
+        c.dias_ate_expiracao > 0 &&
+        c.dias_ate_expiracao <= 90 &&
+        !excludedStatuses.has(c.status_contrato) &&
+        !(c as any).status_pipeline
+      )
       .sort((a, b) => a.dias_ate_expiracao - b.dias_ate_expiracao)
-      .slice(0, 5)
   }, [contratos])
 
   const handleGenerateReport = useCallback(() => {
@@ -523,28 +528,33 @@ export default function Dashboard() {
         {/* Upcoming Contract Expirations */}
         <div className="col-span-5 bg-white rounded-lg border border-gray-200 shadow-sm">
           <div className="px-5 py-4 border-b border-gray-100">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Contratos Próximos ao Vencimento</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+              Contratos Próximos ao Vencimento
+              {contratosProximos.length > 0 && (
+                <span className="ml-1.5 text-gray-400">({contratosProximos.length})</span>
+              )}
+            </h3>
           </div>
           <div className="p-5">
-            {(contratosProximos.length > 0 || cmCandidates.length > 0) ? (
+            {contratosProximos.length > 0 ? (
               <div className="space-y-2">
-                {contratosProximos.map(c => {
-                  const isOverdue = c.dias_ate_expiracao < 0
-                  const isUrgent = c.dias_ate_expiracao >= 0 && c.dias_ate_expiracao < 30
-                  const borderColor = isOverdue ? '#ef4444' : isUrgent ? '#f59e0b' : '#415A67'
-                  const daysColor = isOverdue ? 'text-red-600' : isUrgent ? 'text-amber-600' : 'text-gray-600'
+                {contratosProximos.slice(0, 8).map(c => {
+                  const days = c.dias_ate_expiracao
+                  const borderClass = days <= 30 ? 'border-l-4 border-red-400' : days <= 60 ? 'border-l-4 border-amber-400' : 'border-l-4 border-gray-300'
+                  const daysColor = days <= 30 ? 'text-red-600 font-bold' : days <= 60 ? 'text-amber-600 font-semibold' : 'text-gray-600 font-medium'
                   return (
                     <Link
                       key={c.contrato_id}
                       to={`/contratos/${c.contrato_id}`}
-                      className="block rounded-lg border border-gray-200 p-3 hover:shadow-md transition-shadow"
-                      style={{ borderLeftWidth: '4px', borderLeftColor: borderColor }}
+                      className={`block rounded-lg border border-gray-200 p-3 hover:shadow-md transition-shadow ${borderClass}`}
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <p className="text-xs font-semibold text-gray-900 truncate">{c.cliente_nome.split(' - ')[0]}</p>
-                            <StatusBadge status={c.status_contrato} />
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${c.tipo_contrato === 'APV' ? 'bg-teal-50 text-teal-700' : 'bg-gray-100 text-gray-600'}`}>
+                              {c.tipo_contrato}
+                            </span>
                           </div>
                           <p className="text-[10px] font-light text-gray-500 mt-0.5">
                             {c.modelo || c.marca} · {c.matricula || c.vin?.slice(-6)}
@@ -552,7 +562,7 @@ export default function Dashboard() {
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <div className="text-right">
-                            <p className={`text-sm font-bold ${daysColor}`}>{c.dias_ate_expiracao}d</p>
+                            <p className={`text-sm ${daysColor}`}>{days}d</p>
                             <p className="text-[9px] font-light text-gray-400">{formatDate(c.data_validade)}</p>
                           </div>
                           <ChevronRight size={14} className="text-gray-400" />
@@ -561,57 +571,18 @@ export default function Dashboard() {
                     </Link>
                   )
                 })}
-
-                {/* CM candidates for APV pipeline */}
-                {cmCandidates.map(c => {
-                  const hasExistingDraft = existingPipelineOrigens?.has(c.contrato_id) ?? false
-                  const isOverdue = c.dias_ate_expiracao < 0
-                  const daysColor = isOverdue ? 'text-red-600' : 'text-amber-600'
-                  return (
-                    <div
-                      key={`cm-${c.contrato_id}`}
-                      className="rounded-lg border border-gray-200 p-3"
-                      style={{ borderLeftWidth: '4px', borderLeftColor: '#6B7280' }}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="text-xs font-semibold text-gray-900 truncate">{c.cliente_nome.split(' - ')[0]}</p>
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">CM</span>
-                            <StatusBadge status={c.status_contrato} />
-                          </div>
-                          <p className="text-[10px] font-light text-gray-500 mt-0.5">
-                            {c.modelo || c.marca} · {c.matricula || c.vin?.slice(-6)}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <div className="text-right">
-                            <p className={`text-sm font-bold ${daysColor}`}>{c.dias_ate_expiracao}d</p>
-                            <p className="text-[9px] font-light text-gray-400">{formatDate(c.data_validade)}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mt-2">
-                        {hasExistingDraft ? (
-                          <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                            Proposta em curso
-                          </span>
-                        ) : (
-                          <button
-                            onClick={() => setProposalContrato(c)}
-                            className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-medium text-white hover:opacity-90"
-                            style={{ backgroundColor: '#415A67' }}
-                          >
-                            Propor APV <ArrowRight size={10} />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
+                {contratosProximos.length > 8 && (
+                  <p className="text-xs text-gray-400 text-center pt-1">
+                    e mais {contratosProximos.length - 8} contratos...
+                  </p>
+                )}
               </div>
             ) : (
-              <div className="h-40 flex items-center justify-center text-xs text-gray-400 font-light">Sem contratos próximos ao vencimento</div>
+              <div className="h-40 flex flex-col items-center justify-center">
+                <CheckCircle2 size={28} className="text-nors-teal mb-2" />
+                <p className="text-sm font-medium text-gray-600">Nenhum contrato a vencer nos próximos 90 dias</p>
+                <p className="text-xs text-gray-400 mt-1">Tudo em ordem.</p>
+              </div>
             )}
           </div>
         </div>
