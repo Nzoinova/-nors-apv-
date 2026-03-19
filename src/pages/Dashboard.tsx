@@ -42,6 +42,7 @@ export default function Dashboard() {
   const queryClient = useQueryClient()
   const [proposalContrato, setProposalContrato] = useState<EstadoContrato | null>(null)
   const [donutFilter, setDonutFilter] = useState<'APV' | 'CM' | 'Todos'>('APV')
+  const [topClientesFilter, setTopClientesFilter] = useState<'APV' | 'CM' | 'Todos'>('APV')
   const [generatingReport, setGeneratingReport] = useState(false)
   const [editingEntradaId, setEditingEntradaId] = useState<string | null>(null)
   const [editTipoServico, setEditTipoServico] = useState('')
@@ -181,11 +182,19 @@ export default function Dashboard() {
       if (c.tipo_contrato === 'CM' && c.valor_total_kz) agrupado[key].cmKz += c.valor_total_kz
     })
     return Object.entries(agrupado)
-      .map(([id, d]) => ({ clienteId: id, clienteNome: d.clienteNome, veiculos: d.viaturas.size, apvUsd: d.apvUsd, cmKz: d.cmKz, sortValue: d.apvUsd + d.cmKz / 12 }))
-      .filter(g => g.sortValue > 0)
-      .sort((a, b) => b.sortValue - a.sortValue)
+      .map(([id, d]) => ({ clienteId: id, clienteNome: d.clienteNome, veiculos: d.viaturas.size, apvUsd: d.apvUsd, cmKz: d.cmKz }))
+      .filter(g => {
+        if (topClientesFilter === 'APV') return g.apvUsd > 0
+        if (topClientesFilter === 'CM') return g.cmKz > 0
+        return g.apvUsd > 0 || g.cmKz > 0
+      })
+      .sort((a, b) => {
+        if (topClientesFilter === 'APV') return b.apvUsd - a.apvUsd
+        if (topClientesFilter === 'CM') return b.cmKz - a.cmKz
+        return (b.apvUsd + b.cmKz) - (a.apvUsd + a.cmKz)
+      })
       .slice(0, 5)
-  }, [contratos])
+  }, [contratos, topClientesFilter])
 
   const contratosProximos = useMemo(() => {
     if (!contratos) return []
@@ -493,15 +502,35 @@ export default function Dashboard() {
       <div className="grid grid-cols-12 gap-4">
         {/* Top Clients Ranking */}
         <div className="col-span-7 bg-white rounded-lg border border-gray-200 shadow-sm">
-          <div className="px-5 py-4 border-b border-gray-100">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Top Clientes</h3>
+            <div className="flex gap-1">
+              {(['APV', 'CM', 'Todos'] as const).map(opt => (
+                <button
+                  key={opt}
+                  onClick={() => setTopClientesFilter(opt)}
+                  className={
+                    topClientesFilter === opt
+                      ? 'bg-nors-off-black text-white rounded-md px-2.5 py-1 text-xs font-medium'
+                      : 'text-gray-400 hover:text-gray-600 px-2.5 py-1 text-xs font-medium'
+                  }
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="p-5">
             {topClientes.length > 0 ? (
               <div className="space-y-4">
                 {topClientes.map((client, i) => {
-                  const maxValue = topClientes[0].sortValue
-                  const barPct = maxValue > 0 ? Math.round((client.sortValue / maxValue) * 100) : 0
+                  const maxValue = topClientesFilter === 'APV' ? topClientes[0].apvUsd
+                    : topClientesFilter === 'CM' ? topClientes[0].cmKz
+                    : (topClientes[0].apvUsd + topClientes[0].cmKz)
+                  const clientValue = topClientesFilter === 'APV' ? client.apvUsd
+                    : topClientesFilter === 'CM' ? client.cmKz
+                    : (client.apvUsd + client.cmKz)
+                  const barPct = maxValue > 0 ? Math.round((clientValue / maxValue) * 100) : 0
                   return (
                     <div key={client.clienteId} className="space-y-1.5">
                       <div className="flex items-center justify-between">
@@ -515,15 +544,30 @@ export default function Dashboard() {
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0 ml-3">
-                          {client.apvUsd > 0 && (
+                          {topClientesFilter === 'APV' && (
                             <p className="text-xs font-semibold text-gray-900">
                               {formatUSD(client.apvUsd)}<span className="text-gray-400 font-light">/mês</span>
                             </p>
                           )}
-                          {client.cmKz > 0 && (
-                            <p className="text-[10px] font-light text-gray-500">
-                              {formatKZ(client.cmKz)} <span className="text-gray-400">(CM)</span>
+                          {topClientesFilter === 'CM' && (
+                            <p className="text-xs font-semibold text-gray-900">
+                              {formatKZ(client.cmKz)}
+                              <span className="text-gray-400 font-light ml-1">valor acordo</span>
                             </p>
+                          )}
+                          {topClientesFilter === 'Todos' && (
+                            <>
+                              {client.apvUsd > 0 && (
+                                <p className="text-xs font-semibold text-gray-900">
+                                  {formatUSD(client.apvUsd)}<span className="text-gray-400 font-light">/mês</span>
+                                </p>
+                              )}
+                              {client.cmKz > 0 && (
+                                <p className="text-[10px] font-light text-gray-500">
+                                  {formatKZ(client.cmKz)} <span className="text-gray-400">(CM)</span>
+                                </p>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
