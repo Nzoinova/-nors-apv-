@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import {
   FileText, DollarSign, AlertTriangle, Users, Truck,
   RefreshCw, Plus, Clock, CheckCircle, CheckCircle2, XCircle, ChevronRight, ArrowRight, Loader2,
-  Pencil, Check, X,
+  Pencil, Check, X, PartyPopper,
 } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { getKPIs, getAlertas, getEstadoContratos } from '@/services/dashboard'
@@ -197,6 +197,21 @@ export default function Dashboard() {
         !excludedStatuses.has(c.status_contrato) &&
         !(c as any).status_pipeline
       )
+      .sort((a, b) => a.dias_ate_expiracao - b.dias_ate_expiracao)
+  }, [contratos])
+
+  const contratosExpirados = useMemo(() => {
+    if (!contratos) return []
+    const closedCmStatuses = new Set(['FECHADO_TEMPO', 'FECHADO_INTERVENCOES', 'FECHADO_OUTRO'])
+    return contratos
+      .filter(c => {
+        const isExpired =
+          c.dias_ate_expiracao < 0 ||
+          c.status_contrato === 'EXPIRADO' ||
+          (c.status_cm != null && closedCmStatuses.has(c.status_cm))
+        const notInPipeline = !(c as any).status_pipeline
+        return isExpired && notInPipeline
+      })
       .sort((a, b) => a.dias_ate_expiracao - b.dias_ate_expiracao)
   }, [contratos])
 
@@ -525,28 +540,89 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Upcoming Contract Expirations */}
-        <div className="col-span-5 bg-white rounded-lg border border-gray-200 shadow-sm">
-          <div className="px-5 py-4 border-b border-gray-100">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-              Contratos Próximos ao Vencimento
-              {contratosProximos.length > 0 && (
-                <span className="ml-1.5 text-gray-400">({contratosProximos.length})</span>
+        {/* Right column: Upcoming + Expired stacked */}
+        <div className="col-span-5 space-y-4">
+          {/* Upcoming Contract Expirations */}
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+            <div className="px-5 py-4 border-b border-gray-100">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Contratos Próximos ao Vencimento
+                {contratosProximos.length > 0 && (
+                  <span className="ml-1.5 text-gray-400">({contratosProximos.length})</span>
+                )}
+              </h3>
+            </div>
+            <div className="p-5">
+              {contratosProximos.length > 0 ? (
+                <div className="space-y-2">
+                  {contratosProximos.slice(0, 8).map(c => {
+                    const days = c.dias_ate_expiracao
+                    const borderClass = days <= 30 ? 'border-l-4 border-red-400' : days <= 60 ? 'border-l-4 border-amber-400' : 'border-l-4 border-gray-300'
+                    const daysColor = days <= 30 ? 'text-red-600 font-bold' : days <= 60 ? 'text-amber-600 font-semibold' : 'text-gray-600 font-medium'
+                    return (
+                      <Link
+                        key={c.contrato_id}
+                        to={`/contratos/${c.contrato_id}`}
+                        className={`block rounded-lg border border-gray-200 p-3 hover:shadow-md transition-shadow ${borderClass}`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs font-semibold text-gray-900 truncate">{c.cliente_nome.split(' - ')[0]}</p>
+                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${c.tipo_contrato === 'APV' ? 'bg-teal-50 text-teal-700' : 'bg-gray-100 text-gray-600'}`}>
+                                {c.tipo_contrato}
+                              </span>
+                            </div>
+                            <p className="text-[10px] font-light text-gray-500 mt-0.5">
+                              {c.modelo || c.marca} · {c.matricula || c.vin?.slice(-6)}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="text-right">
+                              <p className={`text-sm ${daysColor}`}>{days}d</p>
+                              <p className="text-[9px] font-light text-gray-400">{formatDate(c.data_validade)}</p>
+                            </div>
+                            <ChevronRight size={14} className="text-gray-400" />
+                          </div>
+                        </div>
+                      </Link>
+                    )
+                  })}
+                  {contratosProximos.length > 8 && (
+                    <p className="text-xs text-gray-400 text-center pt-1">
+                      e mais {contratosProximos.length - 8} contratos...
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="h-40 flex flex-col items-center justify-center">
+                  <CheckCircle2 size={28} className="text-nors-teal mb-2" />
+                  <p className="text-sm font-medium text-gray-600">Nenhum contrato a vencer nos próximos 90 dias</p>
+                  <p className="text-xs text-gray-400 mt-1">Tudo em ordem.</p>
+                </div>
               )}
-            </h3>
+            </div>
           </div>
-          <div className="p-5">
-            {contratosProximos.length > 0 ? (
-              <div className="space-y-2">
-                {contratosProximos.slice(0, 8).map(c => {
-                  const days = c.dias_ate_expiracao
-                  const borderClass = days <= 30 ? 'border-l-4 border-red-400' : days <= 60 ? 'border-l-4 border-amber-400' : 'border-l-4 border-gray-300'
-                  const daysColor = days <= 30 ? 'text-red-600 font-bold' : days <= 60 ? 'text-amber-600 font-semibold' : 'text-gray-600 font-medium'
-                  return (
-                    <Link
+
+          {/* Contratos Expirados */}
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+            <div className="px-5 py-4 border-b border-gray-100">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Contratos Expirados
+                {contratosExpirados.length > 0 && (
+                  <span className="ml-1.5 inline-flex items-center justify-center bg-red-100 text-red-700 rounded-full px-2 py-0.5 text-[10px] font-bold">
+                    {contratosExpirados.length}
+                  </span>
+                )}
+              </h3>
+            </div>
+            <div className="p-5 max-h-[400px] overflow-y-auto">
+              {contratosExpirados.length > 0 ? (
+                <div className="space-y-2">
+                  {contratosExpirados.slice(0, 6).map(c => (
+                    <div
                       key={c.contrato_id}
-                      to={`/contratos/${c.contrato_id}`}
-                      className={`block rounded-lg border border-gray-200 p-3 hover:shadow-md transition-shadow ${borderClass}`}
+                      className="bg-red-50/50 border border-red-100 border-l-4 border-l-red-300 rounded-lg p-3 hover:shadow-sm transition-shadow"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="min-w-0 flex-1">
@@ -562,28 +638,44 @@ export default function Dashboard() {
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <div className="text-right">
-                            <p className={`text-sm ${daysColor}`}>{days}d</p>
+                            <p className="text-sm text-red-500 font-bold">{c.dias_ate_expiracao}d</p>
                             <p className="text-[9px] font-light text-gray-400">{formatDate(c.data_validade)}</p>
                           </div>
-                          <ChevronRight size={14} className="text-gray-400" />
                         </div>
                       </div>
+                      <div className="mt-2 flex justify-end">
+                        {c.tipo_contrato === 'CM' ? (
+                          <button
+                            onClick={() => setProposalContrato(c)}
+                            className="text-[11px] font-semibold text-white bg-nors-teal hover:opacity-90 rounded px-2.5 py-1 transition-opacity"
+                          >
+                            Propor APV →
+                          </button>
+                        ) : (
+                          <Link
+                            to={`/contratos/${c.contrato_id}`}
+                            className="text-[11px] font-semibold text-nors-teal hover:underline"
+                          >
+                            Ver Contrato →
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {contratosExpirados.length > 6 && (
+                    <Link to="/contratos" className="block text-xs text-gray-400 hover:text-nors-teal text-center pt-1">
+                      e mais {contratosExpirados.length - 6} expirados...
                     </Link>
-                  )
-                })}
-                {contratosProximos.length > 8 && (
-                  <p className="text-xs text-gray-400 text-center pt-1">
-                    e mais {contratosProximos.length - 8} contratos...
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className="h-40 flex flex-col items-center justify-center">
-                <CheckCircle2 size={28} className="text-nors-teal mb-2" />
-                <p className="text-sm font-medium text-gray-600">Nenhum contrato a vencer nos próximos 90 dias</p>
-                <p className="text-xs text-gray-400 mt-1">Tudo em ordem.</p>
-              </div>
-            )}
+                  )}
+                </div>
+              ) : (
+                <div className="h-32 flex flex-col items-center justify-center">
+                  <PartyPopper size={28} className="text-nors-teal mb-2" />
+                  <p className="text-sm font-medium text-gray-600">Sem contratos expirados</p>
+                  <p className="text-xs text-gray-400 mt-1">Todos os contratos estão em dia.</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
